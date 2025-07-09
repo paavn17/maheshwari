@@ -103,6 +103,10 @@ export default function OrganizationWisePage() {
 
         {/* Table */}
         {filteredStudents.length > 0 ? (
+            <>
+            <div className="flex justify-center text-sm text-gray-700 mb-2">
+      Total Students: {filteredStudents.length}
+        </div>
           <div className="overflow-x-auto">
             <table className="min-w-full border text-left text-sm">
               <thead className="bg-sky-100">
@@ -131,6 +135,7 @@ export default function OrganizationWisePage() {
               </tbody>
             </table>
           </div>
+          </>
         ) : selectedCollege ? (
           <p className="text-gray-500 mt-4">No students found.</p>
         ) : null}
