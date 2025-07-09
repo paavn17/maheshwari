@@ -1,11 +1,11 @@
-'use client';
-
+"use client"
 import React, { useState, useMemo } from 'react';
 import DashboardLayout from '@/components/admin/page-layout';
 import {
   getStudentsByCollege,
   getUniqueColleges,
   getBranchesByCollege,
+  updateStudent,
 } from '@/lib/fetchers/getStudents';
 
 export default function OrganizationWisePage() {
@@ -13,6 +13,8 @@ export default function OrganizationWisePage() {
   const [selectedBranch, setSelectedBranch] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [students, setStudents] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
 
   const colleges = getUniqueColleges();
 
@@ -25,13 +27,8 @@ export default function OrganizationWisePage() {
     setStudents(data);
   };
 
-  const handleBranchChange = (e) => {
-    setSelectedBranch(e.target.value);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  const handleBranchChange = (e) => setSelectedBranch(e.target.value);
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
@@ -46,12 +43,34 @@ export default function OrganizationWisePage() {
 
   const branches = selectedCollege ? getBranchesByCollege(selectedCollege) : [];
 
+  const handleEditClick = (student) => {
+    setEditingId(student.id);
+    setEditData({ ...student });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditData((prev) => ({ ...prev, [name]: value }));
+  };
+
+const handleSaveClick = async () => {
+  console.log('Saving student:', editData); // Log updated data
+  const updated = await updateStudent(editData);
+  if (updated) {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === updated.id ? updated : s))
+    );
+  }
+  setEditingId(null);
+};
+
+
   return (
     <DashboardLayout>
       <div className="p-6">
         <h1 className="text-2xl font-semibold mb-6">Organization-wise Student Details</h1>
 
-        {/* College Selection */}
+        {/* Dropdowns */}
         <div className="mb-4">
           <label className="block text-gray-700 mb-1">Select College:</label>
           <select
@@ -68,7 +87,6 @@ export default function OrganizationWisePage() {
           </select>
         </div>
 
-        {/* Branch Selection */}
         {branches.length > 0 && (
           <div className="mb-4">
             <label className="block text-gray-700 mb-1">Select Branch:</label>
@@ -87,10 +105,9 @@ export default function OrganizationWisePage() {
           </div>
         )}
 
-        {/* Search Box */}
         {students.length > 0 && (
           <div className="mb-6">
-            <label className="block text-gray-700 mb-1">Search Student (Name or Roll No):</label>
+            <label className="block text-gray-700 mb-1">Search Student:</label>
             <input
               type="text"
               placeholder="Search..."
@@ -103,38 +120,75 @@ export default function OrganizationWisePage() {
 
         {/* Table */}
         {filteredStudents.length > 0 ? (
-            <>
+          <>
             <div className="flex justify-center text-sm text-gray-700 mb-2">
-      Total Students: {filteredStudents.length}
-        </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border text-left text-sm">
-              <thead className="bg-sky-100">
-                <tr>
-                  <th className="p-2 border">First Name</th>
-                  <th className="p-2 border">Last Name</th>
-                  <th className="p-2 border">College Code</th>
-                  <th className="p-2 border">Roll No</th>
-                  <th className="p-2 border">Branch</th>
-                  <th className="p-2 border">Year</th>
-                  <th className="p-2 border">Mobile</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStudents.map((student) => (
-                  <tr key={student.id}>
-                    <td className="p-2 border">{student.first_name}</td>
-                    <td className="p-2 border">{student.last_name}</td>
-                    <td className="p-2 border">{student.college_code}</td>
-                    <td className="p-2 border">{student.roll_no}</td>
-                    <td className="p-2 border">{student.branch}</td>
-                    <td className="p-2 border">{student.year}</td>
-                    <td className="p-2 border">{student.mobile}</td>
+              Total Students: {filteredStudents.length}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border text-left text-sm">
+                <thead className="bg-sky-100">
+                  <tr>
+                    <th className="p-2 border">First Name</th>
+                    <th className="p-2 border">Last Name</th>
+                    <th className="p-2 border">College Code</th>
+                    <th className="p-2 border">Roll No</th>
+                    <th className="p-2 border">Branch</th>
+                    <th className="p-2 border">Year</th>
+                    <th className="p-2 border">Mobile</th>
+                    <th className="p-2 border">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredStudents.map((student) => (
+                    <tr key={student.id}>
+                      {editingId === student.id ? (
+                        <>
+                          {['first_name', 'last_name', 'college_code', 'roll_no', 'branch', 'year', 'mobile'].map(
+                            (field) => (
+                              <td key={field} className="p-2 border">
+                                <input
+                                  type="text"
+                                  name={field}
+                                  value={editData[field]}
+                                  onChange={handleInputChange}
+                                  className="w-full p-1 border border-gray-300 rounded"
+                                />
+                              </td>
+                            )
+                          )}
+                          <td className="p-2 border">
+                            <button
+                              onClick={handleSaveClick}
+                              className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-700 text-xs"
+                            >
+                              Save
+                            </button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-2 border">{student.first_name}</td>
+                          <td className="p-2 border">{student.last_name}</td>
+                          <td className="p-2 border">{student.college_code}</td>
+                          <td className="p-2 border">{student.roll_no}</td>
+                          <td className="p-2 border">{student.branch}</td>
+                          <td className="p-2 border">{student.year}</td>
+                          <td className="p-2 border">{student.mobile}</td>
+                          <td className="p-2 border">
+                            <button
+                              onClick={() => handleEditClick(student)}
+                              className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-700 text-xs"
+                            >
+                              Edit
+                            </button>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         ) : selectedCollege ? (
           <p className="text-gray-500 mt-4">No students found.</p>

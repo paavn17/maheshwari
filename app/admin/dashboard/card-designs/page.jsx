@@ -1,10 +1,11 @@
 import DashboardLayout from '@/components/admin/page-layout'
+import ImageCropper from '@/components/image-cropper'
 import React from 'react'
 
 const page = () => {
   return (
     <DashboardLayout>
-      <h1>Card Designs</h1>
+      <ImageCropper/>
     </DashboardLayout>
   )
 }
