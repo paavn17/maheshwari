@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, BookOpen, Users, Settings, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 
 const ROLE_OPTIONS = [
@@ -35,51 +36,41 @@ const ROLE_OPTIONS = [
 
 const mockUsers = {
   // Student accounts
-  'john.doe@university.edu': {
+  'pavan@gmail.com': {
     id: 'std_001',
-    name: 'John Doe',
+    name: 'Pavan',
     role: 'student',
     grade: 'Senior',
     major: 'Computer Science',
-    enrolledCourses: ['CS101', 'CS201', 'MATH301']
+    enrolledCourses: [],
   },
-  'jane.smith@university.edu': {
-    id: 'std_002',
-    name: 'Jane Smith',
-    role: 'student',
-    grade: 'Junior',
-    major: 'Biology',
-    enrolledCourses: ['BIO101', 'CHEM201', 'MATH201']
-  },
-  
-  // Teacher accounts
-  'prof.wilson@university.edu': {
+  // Institute accounts
+  'prof@gmail.com': {
     id: 'tch_001',
     name: 'Prof. Wilson',
     role: 'teacher',
     department: 'Computer Science',
-    courses: ['CS101', 'CS201', 'CS301'],
-    students: ['std_001', 'std_003', 'std_004']
-  },
-  'prof.davis@university.edu': {
-    id: 'tch_002',
-    name: 'Prof. Davis',
-    role: 'teacher',
-    department: 'Biology',
-    courses: ['BIO101', 'BIO201'],
-    students: ['std_002', 'std_005']
   },
   
   // Admin accounts
-  'admin@university.edu': {
+  'admin@gmail.com': {
     id: 'adm_001',
     name: 'System Admin',
     role: 'admin',
-    permissions: ['all']
+    permissions: ['all'],
   }
 };
 
+const roleToUrlMap = {
+  student: '/student/dashboard',
+  teacher: '/institute/dashboard',
+  admin: '/admin/dashboard'
+};
+
+
 export default function LoginPage() {
+
+    const router = useRouter();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -133,100 +124,89 @@ export default function LoginPage() {
   };
 
 
-  const simulateLogin = async (data) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Check if user exists in mock database
-    const user = mockUsers[data.email];
-    
-    if (!user) {
-      return {
-        success: false,
-        message: 'Account not found. Please check your email address.'
-      };
-    }
-    
-    // Verify role matches
-    if (user.role !== data.role) {
-      return {
-        success: false,
-        message: `This email is registered as ${user.role}, not ${data.role}. Please select the correct role.`
-      };
-    }
-    
-    // Mock password validation (in real app, use bcrypt or similar)
-    if (data.password !== 'password123') {
-      return {
-        success: false,
-        message: 'Incorrect password. Please try again.'
-      };
-    }
-    
-    // Get role configuration
-    const roleConfig = ROLE_OPTIONS.find(r => r.id === user.role);
-    
+ const simulateLogin = async (data) => {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  const user = mockUsers[data.email];
+
+  if (!user) {
     return {
-      success: true,
-      message: `Welcome back, ${user.name}!`,
-      user: user,
-      redirectUrl: roleConfig.dashboardUrl,
-      permissions: roleConfig.permissions
+      success: false,
+      message: 'Account not found. Please check your email address.'
     };
+  }
+
+  if (user.role !== data.role) {
+    return {
+      success: false,
+      message: `This email is registered as ${user.role}, not ${data.role}. Please select the correct role.`
+    };
+  }
+
+  if (data.password !== 'password123') {
+    return {
+      success: false,
+      message: 'Incorrect password. Please try again.'
+    };
+  }
+
+  // ✅ Dynamically get the redirect URL from role
+  const redirectUrl = roleToUrlMap[user.role];
+
+  return {
+    success: true,
+    message: `Welcome back, ${user.name}!`,
+    user: user,
+    redirectUrl: redirectUrl,
+    permissions: ROLE_OPTIONS.find(r => r.id === user.role)?.permissions || []
   };
+};
 
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate form first
-    if (!validateForm()) return;
-    
-    setIsLoading(true);
-    setErrors({});
-    setSuccessMessage('');
-    
-    try {
-      const result = await simulateLogin(formData);
-      
-      if (result.success) {
-        setSuccessMessage(`${result.message} Redirecting to ${result.user.role} dashboard...`);
-        
-        // In a real app, you would:
-        // 1. Store JWT token in localStorage or httpOnly cookie
-        // 2. Set user context/state
-        // 3. Redirect using Next.js router
-        // 4. Update global auth state
-        
-        console.log('Login Success Data:', {
-          user: result.user,
-          redirectUrl: result.redirectUrl,
-          permissions: result.permissions
-        });
-        
-        // Simulate redirect (in real app: router.push(result.redirectUrl))
-        setTimeout(() => {
-          alert(`SUCCESS!\nUser: ${result.user.name}\nRole: ${result.user.role}\nRedirecting to: ${result.redirectUrl}`);
-          
-          // Reset form
-          setFormData({
-            email: '',
-            password: '',
-            role: '',
-            rememberMe: false
-          });
-          setSuccessMessage('');
-        }, 1500);
-      } else {
-        setErrors({ general: result.message });
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      setErrors({ general: 'An unexpected error occurred. Please try again.' });
-    } finally {
-      setIsLoading(false);
+
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!validateForm()) return;
+
+  setIsLoading(true);
+  setErrors({});
+  setSuccessMessage('');
+
+  try {
+    const result = await simulateLogin(formData);
+
+    if (result.success) {
+      setSuccessMessage(`${result.message} Redirecting to ${result.user.role} dashboard...`);
+
+      console.log('Login Success Data:', {
+        user: result.user,
+        redirectUrl: result.redirectUrl,
+        permissions: result.permissions
+      });
+      router.push(result.redirectUrl);
+
+      // (Optional) Reset form if you want to clear it immediately
+      setFormData({
+        email: '',
+        password: '',
+        role: '',
+        rememberMe: false
+      });
+      setSuccessMessage('');
+    } else {
+      setErrors({ general: result.message });
     }
-  };
+
+  } catch (error) {
+    console.error('Login error:', error);
+    setErrors({ general: 'An unexpected error occurred. Please try again.' });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({

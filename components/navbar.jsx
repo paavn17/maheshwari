@@ -18,7 +18,7 @@ export default function Navbar() {
 
   return (
     <div className="pt-6 px-4 md:px-8">
-      <nav className="w-full max-w-8xl mx-auto bg-white/70 backdrop-blur-md border border-white/30 rounded-xl px-6 md:px-10 py-4 shadow-md">
+      <nav className="w-full max-w-8xl mx-auto bg-white/70 backdrop-blur-md border border-white/30 rounded-xl px-6 md:px-10 shadow-md">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           {/* Logo */}
           <Image src="/images/logo.png" alt="Logo" width={90} height={50} />
