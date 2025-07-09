@@ -75,7 +75,7 @@ const EmployeeUploadPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="p-6 max-w-3xl">
         <h1 className="text-2xl font-bold mb-6">Upload Employee Details</h1>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
