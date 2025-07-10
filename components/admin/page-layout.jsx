@@ -4,15 +4,28 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  UploadCloud,
+  ShieldCheck,
+  FileBarChart2,
+  CreditCard,
+  Lock,
+  LogOut,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
 
 const menuItems = [
   {
     title: 'Dashboard',
     href: '/admin/dashboard',
+    icon: <LayoutDashboard size={18} className="mr-2" />,
   },
   {
     title: 'User Management',
+    icon: <Users size={18} className="mr-2" />,
     submenu: [
       { title: 'Admin Details', href: '/admin/dashboard/admin-details' },
       { title: 'Upload Students Data', href: '/admin/dashboard/upload-students' },
@@ -24,9 +37,11 @@ const menuItems = [
   {
     title: 'Payment Details',
     href: '/admin/dashboard/payment-details',
+    icon: <CreditCard size={18} className="mr-2" />,
   },
   {
     title: 'Reports',
+    icon: <FileBarChart2 size={18} className="mr-2" />,
     submenu: [
       { title: 'Organizationwise', href: '/admin/dashboard/organization-wise' },
       { title: 'Payment Report', href: '/admin/dashboard/payment-report' },
@@ -37,11 +52,13 @@ const menuItems = [
   {
     title: 'Change Password',
     href: '/admin/dashboard/change-password',
+    icon: <Lock size={18} className="mr-2" />,
   },
   {
     title: 'Logout',
     href: '/login',
     danger: true,
+    icon: <LogOut size={18} className="mr-2" />,
   },
 ];
 
@@ -55,7 +72,6 @@ export default function DashboardLayout({ children }) {
 
   const isActive = (href) => pathname === href;
 
-  // ✅ Automatically expand relevant menu if current route matches submenu
   useEffect(() => {
     const initiallyExpanded = {};
     menuItems.forEach((item) => {
@@ -71,80 +87,98 @@ export default function DashboardLayout({ children }) {
   }, [pathname]);
 
   return (
-    <div className="flex min-h-screen font-sans">
+    <div className="flex min-h-screen font-sans bg-gray-50">
       {/* Sidebar */}
-      <aside className="bg-sky-200 p-6 shadow-lg flex flex-col min-w-[220px] max-w-[260px]">
-        {/* Logo */}
-        <div className="flex items-center justify-center mb-10">
-          <Image
-            src="/images/logo.png"
-            alt="ID Card's Logo"
-            width={120}
-            height={120}
-            className="object-contain"
-          />
-        </div>
+      <aside className="sticky top-0 h-screen w-[240px] bg-white shadow-md flex flex-col justify-between">
+        <div>
+          {/* Logo & Title */}
+          <div className="flex flex-col items-center py-6">
+            <Image
+              src="/images/logo.png"
+              alt="ID Card Logo"
+              width={150}
+              height={80}
+              className="object-contain"
+            />
+            <span className="mt-2 font-bold text-lg text-gray-800 text-center">
+              Maheshwari ID Cards
+            </span>
+          </div>
 
-        {/* Navigation */}
-        <nav className="flex flex-col text-[16px] font-medium text-gray-800 space-y-5">
-          {menuItems.map((item) =>
-            item.submenu ? (
-              <div key={item.title}>
-                <button
-                  onClick={() => toggleMenu(item.title)}
-                  className="flex items-center justify-between w-full hover:text-sky-700 transition"
-                >
-                  <span>{item.title}</span>
-                  {expandedMenus[item.title] ? (
-                    <ChevronDown size={18} />
-                  ) : (
-                    <ChevronRight size={18} />
-                  )}
-                </button>
-                <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    expandedMenus[item.title] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                  }`}
-                >
-                  <div className="mt-2 flex flex-col space-y-1 text-[15px] text-gray-700">
-                    {item.submenu.map((sub) => (
-                      <Link
-                        key={sub.href}
-                        href={sub.href}
-                        className="text-left pl-4 py-2 hover:bg-sky-300/40 rounded-md transition-all"
-                      >
-                        {sub.title}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
+          {/* Navigation */}
+          <nav className="flex flex-col space-y-3 px-4 mt-10 text-sm font-medium">
+  {menuItems.map((item) =>
+    item.submenu ? (
+      <div key={item.title}>
+        <button
+          onClick={() => toggleMenu(item.title)}
+          className="flex items-center justify-between w-full text-gray-700 hover:text-sky-700 transition"
+        >
+          <div className="flex items-center">
+            {item.icon}
+            <span>{item.title}</span>
+          </div>
+          {expandedMenus[item.title] ? (
+            <ChevronDown size={18} />
+          ) : (
+            <ChevronRight size={18} />
+          )}
+        </button>
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            expandedMenus[item.title] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="mt-2 flex flex-col space-y-1 text-gray-700"> {/* Removed ml-6 here */}
+            {item.submenu.map((sub) => (
               <Link
-                key={item.href}
-                href={item.href}
-                className={`text-left transition ${
-                  item.danger
-                    ? 'hover:text-red-600'
-                    : 'hover:text-sky-700'
-                } ${
-                  isActive(item.href)
-                    ? item.danger
-                      ? 'text-red-600 font-semibold'
-                      : 'text-sky-700 font-semibold'
+                key={sub.href}
+                href={sub.href}
+                className={`px-6 py-2 rounded-md transition-all text-left hover:bg-sky-100 ${
+                  isActive(sub.href)
+                    ? 'bg-sky-100 text-sky-700 font-semibold'
                     : ''
                 }`}
               >
-                {item.title}
+                {sub.title}
               </Link>
-            )
-          )}
-        </nav>
+            ))}
+          </div>
+        </div>
+      </div>
+    ) : (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`flex items-center justify-between px-4 py-2 rounded-md transition ${
+          item.danger
+            ? 'text-red-600 hover:text-red-700'
+            : 'text-gray-600 hover:text-sky-700 hover:bg-gray-100'
+        } ${
+          isActive(item.href)
+            ? item.danger
+              ? 'text-red-600 font-semibold'
+              : 'bg-sky-100 text-sky-700 font-semibold'
+            : ''
+        }`}
+      >
+        <div className="flex items-center">
+          {item.icon}
+          <span>{item.title}</span>
+        </div>
+        <div className="w-[18px]" />
+      </Link>
+    )
+  )}
+</nav>
+        </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-white p-10">
-        {children || <div className="text-gray-400 text-xl">Main content goes here...</div>}
+      <main className="flex-1 overflow-y-auto max-h-screen p-8 bg-sky-100">
+        {children || (
+          <div className="text-gray-400 text-lg">Main content goes here...</div>
+        )}
       </main>
     </div>
   );

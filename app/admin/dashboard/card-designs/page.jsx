@@ -1,12 +1,11 @@
 import DashboardLayout from '@/components/admin/page-layout'
-import ImageCropper from '@/components/image-cropper'
+// import ImageCropper from '@/components/image-cropper'
 import { idCardImages } from '@/lib/idCard'
 import Image from 'next/image'
 
 const page = () => {
   return (
     <DashboardLayout>
-      <ImageCropper/>
       <div className="p-6">
               <h1 className="text-2xl font-semibold mb-6 text-sky-800">ID Card Designs</h1>
       

@@ -1,64 +1,91 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  CreditCard,
+  LogOut,
+} from 'lucide-react';
 
 export default function StudentLayout({ children }) {
   const pathname = usePathname();
 
-  const isActive = (href) => pathname === href;
+  const navItems = [
+    {
+      label: 'Dashboard',
+      icon: <LayoutDashboard size={18} className="mr-2" />,
+      href: '/student/dashboard',
+    },
+    {
+      label: 'Payment',
+      icon: <CreditCard size={18} className="mr-2" />,
+      href: '/student/dashboard/card-designs',
+    },
+  ];
 
   return (
-    <div className="flex min-h-screen font-sans">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="bg-sky-200 p-6 shadow-lg flex flex-col justify-between min-w-[220px] max-w-[260px]">
+      <aside className="sticky top-0 h-screen w-[240px] bg-white shadow-md flex flex-col justify-between">
         <div>
-          {/* Logo */}
-          <div className="flex items-center justify-center mb-10">
+          {/* Logo & Name */}
+          <div className="flex flex-col items-center py-6">
             <Image
               src="/images/logo.png"
               alt="ID Card's Logo"
-              width={120}
-              height={120}
+              width={150}
+              height={80}
               className="object-contain"
             />
+            <span className="mt-2 font-bold text-lg text-gray-800 text-center">
+              Maheshwari ID Cards
+            </span>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex flex-col text-[16px] font-medium text-gray-800 space-y-4">
-            <Link
-              href="/student/dashboard"
-              className={`text-left hover:text-sky-700 transition ${
-                isActive('/student/dashboard') ? 'text-sky-700 font-semibold' : ''
-              }`}
-            >
-              Dashboard
-            </Link>
+          {/* Gap */}
+          <div className="mt-4 "></div>
 
-            <Link
-              href="/student/dashboard/card-designs"
-              className={`text-left hover:text-sky-700 transition ${
-                isActive('/student/dashboard/card-designs') ? 'text-sky-700 font-semibold' : ''
-              }`}
-            >
-              Card Designs
-            </Link>
-            <Link
-            href="/login"
-            className="text-left text-red-600 hover:text-red-700 transition font-medium mt-16"
-          >
-            Logout
-          </Link>
+          {/* Navigation */}
+          <nav className="flex flex-col space-y-3 px-4 mt-10">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition ${
+                    isActive
+                      ? 'bg-sky-100 text-sky-700 font-semibold w-auto'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-sky-700'
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
+                  {/* Logout */}
+        <div className="px-8 mt-16">
+          <Link
+            href="/login"
+            className="flex items-center text-sm text-red-600 hover:text-red-700 transition"
+          >
+            <LogOut size={18} className="mr-2" />
+            Log out
+          </Link>
         </div>
 
-        {/* Logout Button */}
+        </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-white p-10">
-        {children || <div className="text-gray-400 text-xl">Student content goes here...</div>}
+      <main className="flex-1 overflow-y-auto max-h-screen p-8 bg-sky-100">
+        {children || (
+          <div className="text-gray-400 text-lg">Student content goes here...</div>
+        )}
       </main>
     </div>
   );

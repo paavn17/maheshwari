@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import StudentLayout from '@/components/student/page-layout';
 import Image from 'next/image';
-import { idCardImages } from '@/lib/idCard';
 
 const dummyStudent = {
   id: 1,
@@ -22,22 +21,11 @@ const dummyStudent = {
 
 export default function StudentDashboard() {
   const [student, setStudent] = useState(dummyStudent);
-  const [searchTerm, setSearchTerm] = useState('');
   const [editMode, setEditMode] = useState(false);
-
-  const filteredCards = useMemo(() => {
-    return idCardImages.filter((card) =>
-      card.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setStudent((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCardSelect = (name) => {
-    setStudent((prev) => ({ ...prev, selected_id: name }));
   };
 
   const handlePay = () => {
@@ -45,37 +33,33 @@ export default function StudentDashboard() {
   };
 
   const handleDownload = () => {
-    alert(`Downloading card: ${student.selected_id}`);
+    alert(`Downloading card: ${student.selected_id || 'Selected ID not found'}`);
   };
 
   const handleSave = () => {
-    const requiredFields = [
-      'first_name',
-      'last_name',
-      'college_code',
-      'roll_no',
-      'college_name',
-      'year',
-      'mobile',
-      'branch'
-    ];
-
+    const requiredFields = ['first_name', 'last_name', 'mobile'];
     for (let field of requiredFields) {
       if (!student[field] || student[field].trim() === '') {
         alert(`Please fill in the ${field.replace('_', ' ')} field.`);
         return;
       }
     }
-
     console.log('Saved student data:', student);
     setEditMode(false);
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageURL = URL.createObjectURL(file);
+      setStudent((prev) => ({ ...prev, image: imageURL }));
+    }
+  };
+
   return (
     <StudentLayout>
-      <div className="flex flex-col md:flex-row gap-6 p-6">
-        {/* Left - Student Info */}
-        <div className="flex-1 bg-white p-4 rounded space-y-4">
+      <div className="p-6">
+        <div className=" p-4 rounded space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-sky-700">Your Details</h2>
             {editMode ? (
@@ -97,23 +81,43 @@ export default function StudentDashboard() {
 
           <div className="grid grid-cols-2 gap-4">
             {Object.entries(student).map(([key, val]) => {
-              if (['selected_id', 'payment_status'].includes(key)) return null;
+              if (key === 'selected_id' || key === 'payment_status') return null;
 
               const label = key.replace(/_/g, ' ');
 
+              if (key === 'image') {
+                return (
+                  <div key={key} className="col-span-2 space-y-2">
+                    <label className="block text-sm text-gray-600 capitalize">{label}</label>
+                    <div className="flex items-center gap-4">
+                      <Image
+                        src={val}
+                        alt="Student"
+                        width={100}
+                        height={100}
+                        className="rounded border object-cover"
+                      />
+                      {editMode && (
+                        <input type="file" accept="image/*" onChange={handleImageChange} />
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+
+              const isEditable = ['first_name', 'last_name', 'mobile'].includes(key);
+
               return (
                 <div key={key}>
-                  <label className="block text-sm text-gray-600 capitalize mb-1">
-                    {label}
-                  </label>
+                  <label className="block text-sm text-gray-600 capitalize mb-1">{label}</label>
                   <input
                     type="text"
                     name={key}
                     value={val}
                     onChange={handleInputChange}
-                    disabled={!editMode || key === 'image'}
+                    disabled={!editMode || !isEditable}
                     className={`w-full p-2 border rounded ${
-                      !editMode || key === 'image' ? 'bg-gray-100' : ''
+                      !editMode || !isEditable ? 'bg-gray-100' : ''
                     }`}
                   />
                 </div>
@@ -136,7 +140,7 @@ export default function StudentDashboard() {
             <button
               onClick={handlePay}
               className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
-              disabled={!student.selected_id || student.payment_status === 'paid'}
+              disabled={student.payment_status === 'paid'}
             >
               Pay Now
             </button>
@@ -149,9 +153,15 @@ export default function StudentDashboard() {
             </button>
           </div>
         </div>
+      </div>
+    </StudentLayout>
+  );
+}
+
+
 
         {/* Right - ID Card List */}
-        <div className="w-full md:w-[300px] space-y-4">
+        {/* <div className="w-full md:w-[300px] space-y-4">
           <input
             type="text"
             placeholder="Search ID card..."
@@ -185,8 +195,4 @@ export default function StudentDashboard() {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-    </StudentLayout>
-  );
-}
+        </div> */}
