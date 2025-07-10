@@ -88,9 +88,9 @@ export default function LoginPage() {
   const getEmailPlaceholder = (role) => {
 
     const placeholders = {
-      student: 'john.doe@university.edu',
-      teacher: 'prof.wilson@university.edu',
-      admin: 'admin@university.edu',
+      student: 'pavan@gmail.com',
+      teacher: 'vignan@uni.edu',
+      admin: 'admin@gmail.com',
       '': 'Select a role first'
     };
     return placeholders[role] || 'Enter your email address';
