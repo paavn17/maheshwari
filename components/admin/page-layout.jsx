@@ -40,7 +40,7 @@ const menuItems = [
   },
   {
     title: 'Logout',
-    href: '/logout',
+    href: '/login',
     danger: true,
   },
 ];

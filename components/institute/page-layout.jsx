@@ -27,6 +27,15 @@ export default function InstituteLayout({ children }) {
 
           {/* Navigation */}
           <nav className="flex flex-col text-[16px] font-medium text-gray-800 space-y-4">
+              <Link
+              href="/institute/dashboard/"
+              className={`hover:text-sky-700 transition mb-16 font-bold ${
+                isActive('/institute/dashboard/upload-employees') ? 'text-sky-700 font-semibold' : ''
+              }`}
+            >
+              Dashboard
+            </Link>
+
             <Link
               href="/institute/dashboard/upload-students"
               className={`hover:text-sky-700 transition ${
@@ -89,7 +98,7 @@ export default function InstituteLayout({ children }) {
         {/* Logout Button */}
         <div className="mt-10">
           <Link
-            href="/logout"
+            href="/login"
             className="text-left text-red-600 hover:text-red-700 transition font-medium"
           >
             Logout

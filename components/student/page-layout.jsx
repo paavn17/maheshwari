@@ -50,7 +50,7 @@ export default function StudentLayout({ children }) {
         {/* Logout Button */}
         <div className="mb-24">
           <Link
-            href="/logout"
+            href="/login"
             className="text-left text-red-600 hover:text-red-700 transition font-medium"
           >
             Logout

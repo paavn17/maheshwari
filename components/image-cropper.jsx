@@ -55,13 +55,18 @@ export default function ImageCropper({ onCropComplete = () => {} }) {
       {!image && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
-            Upload ID Card Image:
+            Upload New ID Card Image:
           </label>
           <input
             type="file"
             accept="image/*"
             onChange={onFileChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="file:mr-4 file:py-2 file:px-4
+                        file:rounded file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-sky-200 file:text-gray-700
+                        hover:file:bg-sky-300
+                        max-w-xs hover:cursor-pointer"
           />
         </div>
       )}
