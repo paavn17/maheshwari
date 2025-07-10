@@ -44,18 +44,16 @@ export default function StudentLayout({ children }) {
             >
               Card Designs
             </Link>
+            <Link
+            href="/login"
+            className="text-left text-red-600 hover:text-red-700 transition font-medium mt-16"
+          >
+            Logout
+          </Link>
           </nav>
         </div>
 
         {/* Logout Button */}
-        <div className="mb-24">
-          <Link
-            href="/login"
-            className="text-left text-red-600 hover:text-red-700 transition font-medium"
-          >
-            Logout
-          </Link>
-        </div>
       </aside>
 
       {/* Main Content */}

@@ -15,7 +15,7 @@ const dummyStudent = {
   year: '3rd Year',
   mobile: '9876543210',
   branch: 'CSE',
-  image: '',
+  image: 'https://randomuser.me/api/portraits/men/1.jpg',
   payment_status: 'unpaid',
   selected_id: '',
 };
@@ -23,6 +23,7 @@ const dummyStudent = {
 export default function StudentDashboard() {
   const [student, setStudent] = useState(dummyStudent);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editMode, setEditMode] = useState(false);
 
   const filteredCards = useMemo(() => {
     return idCardImages.filter((card) =>
@@ -47,32 +48,79 @@ export default function StudentDashboard() {
     alert(`Downloading card: ${student.selected_id}`);
   };
 
+  const handleSave = () => {
+    const requiredFields = [
+      'first_name',
+      'last_name',
+      'college_code',
+      'roll_no',
+      'college_name',
+      'year',
+      'mobile',
+      'branch'
+    ];
+
+    for (let field of requiredFields) {
+      if (!student[field] || student[field].trim() === '') {
+        alert(`Please fill in the ${field.replace('_', ' ')} field.`);
+        return;
+      }
+    }
+
+    console.log('Saved student data:', student);
+    setEditMode(false);
+  };
+
   return (
     <StudentLayout>
       <div className="flex flex-col md:flex-row gap-6 p-6">
         {/* Left - Student Info */}
-        <div className="flex-1 bg-white p-4 rounded  space-y-4">
-          <h2 className="text-xl font-semibold text-sky-700">Your Details</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {Object.entries(student).map(
-              ([key, val]) =>
-                key !== 'selected_id' &&
-                key !== 'payment_status' && (
-                  <div key={key}>
-                    <label className="block text-sm text-gray-600 capitalize">
-                      {key.replace('_', ' ')}
-                    </label>
-                    <input
-                      type="text"
-                      name={key}
-                      value={val}
-                      onChange={handleInputChange}
-                      className="w-full p-2 rounded"
-                    />
-                  </div>
-                )
+        <div className="flex-1 bg-white p-4 rounded space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-sky-700">Your Details</h2>
+            {editMode ? (
+              <button
+                onClick={handleSave}
+                className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+              >
+                Save
+              </button>
+            ) : (
+              <button
+                onClick={() => setEditMode(true)}
+                className="bg-sky-500 text-white px-3 py-1 rounded hover:bg-sky-600"
+              >
+                Edit
+              </button>
             )}
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {Object.entries(student).map(([key, val]) => {
+              if (['selected_id', 'payment_status'].includes(key)) return null;
+
+              const label = key.replace(/_/g, ' ');
+
+              return (
+                <div key={key}>
+                  <label className="block text-sm text-gray-600 capitalize mb-1">
+                    {label}
+                  </label>
+                  <input
+                    type="text"
+                    name={key}
+                    value={val}
+                    onChange={handleInputChange}
+                    disabled={!editMode || key === 'image'}
+                    className={`w-full p-2 border rounded ${
+                      !editMode || key === 'image' ? 'bg-gray-100' : ''
+                    }`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
           <div className="mt-4">
             <label className="block text-sm text-gray-600">Payment Status</label>
             <span
@@ -83,6 +131,7 @@ export default function StudentDashboard() {
               {student.payment_status}
             </span>
           </div>
+
           <div className="mt-6 space-x-4">
             <button
               onClick={handlePay}
@@ -108,14 +157,14 @@ export default function StudentDashboard() {
             placeholder="Search ID card..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full p-2  rounded"
+            className="w-full p-2 border rounded"
           />
 
           <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
             {filteredCards.map((card) => (
               <div
                 key={card.name}
-                className={` p-2 rounded flex flex-col items-center cursor-pointer hover:shadow transition ${
+                className={`p-2 rounded flex flex-col items-center cursor-pointer hover:shadow transition ${
                   student.selected_id === card.name
                     ? 'bg-sky-300'
                     : 'bg-white'
