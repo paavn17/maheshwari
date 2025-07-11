@@ -26,13 +26,8 @@ export default function DownloadDataPage() {
     setStudents(data);
   };
 
-  const handleBranchChange = (e) => {
-    setSelectedBranch(e.target.value);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  const handleBranchChange = (e) => setSelectedBranch(e.target.value);
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
@@ -59,104 +54,101 @@ export default function DownloadDataPage() {
   return (
     <DashboardLayout>
       <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-6">Download Student Data</h1>
+        <h1 className="text-2xl font-semibold mb-6 text-gray-800">Download Student Data</h1>
 
-        {/* College Selection */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Select College:</label>
-          <select
-            value={selectedCollege}
-            onChange={handleCollegeChange}
-            className="p-2 border border-gray-300 rounded w-full max-w-md"
-          >
-            <option value="">-- Select a college --</option>
-            {colleges.map((college, index) => (
-              <option key={index} value={college}>
-                {college}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Branch Selection */}
-        {branches.length > 0 && (
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-1">Select Branch:</label>
+        <div className="grid sm:grid-cols-2 gap-4 mb-6 max-w-2xl">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Select College</label>
             <select
-              value={selectedBranch}
-              onChange={handleBranchChange}
-              className="p-2 border border-gray-300 rounded w-full max-w-md"
+              value={selectedCollege}
+              onChange={handleCollegeChange}
+              className="w-full p-2 border border-gray-300 rounded"
             >
-              <option value="">-- All Branches --</option>
-              {branches.map((branch, index) => (
-                <option key={index} value={branch}>
-                  {branch}
+              <option value="">-- Select a college --</option>
+              {colleges.map((college, index) => (
+                <option key={index} value={college}>
+                  {college}
                 </option>
               ))}
             </select>
           </div>
-        )}
 
-        {/* Search Box */}
+          {branches.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Select Branch</label>
+              <select
+                value={selectedBranch}
+                onChange={handleBranchChange}
+                className="w-full p-2 border border-gray-300 rounded"
+              >
+                <option value="">-- All Branches --</option>
+                {branches.map((branch, index) => (
+                  <option key={index} value={branch}>
+                    {branch}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
         {students.length > 0 && (
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-1">Search Student (Name or Roll No):</label>
+          <div className="mb-6 max-w-md">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Search Student (Name or Roll No)</label>
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="p-2 border border-gray-300 rounded w-full max-w-md"
+              className="w-full p-2 border border-gray-300 rounded"
             />
           </div>
         )}
 
-        {/* Download Button */}
         {filteredStudents.length > 0 && (
           <div className="mb-4">
             <button
               onClick={handleDownloadExcel}
-              className="bg-sky-400 text-white px-4 py-2 rounded hover:bg-sky-700 transition hover:cursor-pointer"
+              className="bg-sky-500 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
             >
               Download Excel
             </button>
           </div>
         )}
 
-        {/* Table */}
         {filteredStudents.length > 0 ? (
           <>
-          <div className="flex justify-center text-sm text-gray-700 mb-2">
-      Total Students: {filteredStudents.length}
-        </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border text-left text-sm">
-              <thead className="bg-sky-100">
-                <tr>
-                  <th className="p-2 border">First Name</th>
-                  <th className="p-2 border">Last Name</th>
-                  <th className="p-2 border">College Code</th>
-                  <th className="p-2 border">Roll No</th>
-                  <th className="p-2 border">Branch</th>
-                  <th className="p-2 border">Year</th>
-                  <th className="p-2 border">Mobile</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStudents.map((student) => (
-                  <tr key={student.id}>
-                    <td className="p-2 border">{student.first_name}</td>
-                    <td className="p-2 border">{student.last_name}</td>
-                    <td className="p-2 border">{student.college_code}</td>
-                    <td className="p-2 border">{student.roll_no}</td>
-                    <td className="p-2 border">{student.branch}</td>
-                    <td className="p-2 border">{student.year}</td>
-                    <td className="p-2 border">{student.mobile}</td>
+            <div className="text-sm text-gray-700 mb-2">
+              Total Students: {filteredStudents.length}
+            </div>
+            <div className="overflow-x-auto shadow rounded-lg">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-sky-200 text-gray-700 text-sm">
+                  <tr>
+                    <th className="px-4 py-3 text-left">First Name</th>
+                    <th className="px-4 py-3 text-left">Last Name</th>
+                    <th className="px-4 py-3 text-left">College Code</th>
+                    <th className="px-4 py-3 text-left">Roll No</th>
+                    <th className="px-4 py-3 text-left">Branch</th>
+                    <th className="px-4 py-3 text-left">Year</th>
+                    <th className="px-4 py-3 text-left">Mobile</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100 text-sm">
+                  {filteredStudents.map((student) => (
+                    <tr key={student.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2">{student.first_name}</td>
+                      <td className="px-4 py-2">{student.last_name}</td>
+                      <td className="px-4 py-2">{student.college_code}</td>
+                      <td className="px-4 py-2">{student.roll_no}</td>
+                      <td className="px-4 py-2">{student.branch}</td>
+                      <td className="px-4 py-2">{student.year}</td>
+                      <td className="px-4 py-2">{student.mobile}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         ) : selectedCollege ? (
           <p className="text-gray-500 mt-4">No students found.</p>

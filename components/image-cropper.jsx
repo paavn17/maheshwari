@@ -64,7 +64,7 @@ export default function ImageCropper({ onCropComplete = () => {} }) {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded-md shadow space-y-6">
+    <div className="max-w-xl  p-6 bg-white rounded-md shadow space-y-6">
       {step !== 'done' && !image && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">

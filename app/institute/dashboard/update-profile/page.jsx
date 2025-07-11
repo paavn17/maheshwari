@@ -28,7 +28,7 @@ export default function Page() {
 
   return (
     <InstituteLayout>
-      <div className="p-6 max-w-3xl bg-white rounded shadow space-y-6">
+      <div className="p-6 max-w-3xl bg-sky-50 rounded shadow space-y-6">
         <h1 className="text-2xl font-semibold text-sky-800">Update Institute Profile</h1>
 
         {/* FORM */}
