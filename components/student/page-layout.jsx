@@ -21,7 +21,7 @@ export default function StudentLayout({ children }) {
     {
       label: 'Payment',
       icon: <CreditCard size={18} className="mr-2" />,
-      href: '/student/dashboard/card-designs',
+      href: '/student/dashboard/payment'
     },
   ];
 
