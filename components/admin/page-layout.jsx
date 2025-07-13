@@ -7,8 +7,6 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Users,
-  UploadCloud,
-  ShieldCheck,
   FileBarChart2,
   CreditCard,
   Lock,
@@ -86,6 +84,15 @@ export default function DashboardLayout({ children }) {
     setExpandedMenus((prev) => ({ ...prev, ...initiallyExpanded }));
   }, [pathname]);
 
+  const handleLogout = async () => {
+    try {
+      const res = await fetch('/api/logout');
+      if (res.ok) window.location.href = '/login';
+    } catch (err) {
+      console.error('Logout failed', err);
+    }
+  };
+
   return (
     <div className="flex min-h-screen font-sans bg-gray-50">
       {/* Sidebar */}
@@ -107,70 +114,82 @@ export default function DashboardLayout({ children }) {
 
           {/* Navigation */}
           <nav className="flex flex-col space-y-3 px-4 mt-10 text-sm font-medium">
-  {menuItems.map((item) =>
-    item.submenu ? (
-      <div key={item.title}>
-        <button
-          onClick={() => toggleMenu(item.title)}
-          className="flex items-center justify-between w-full text-gray-700 hover:text-sky-700 transition"
-        >
-          <div className="flex items-center">
-            {item.icon}
-            <span>{item.title}</span>
-          </div>
-          {expandedMenus[item.title] ? (
-            <ChevronDown size={18} />
-          ) : (
-            <ChevronRight size={18} />
-          )}
-        </button>
-        <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            expandedMenus[item.title] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="mt-2 flex flex-col space-y-1 text-gray-700"> {/* Removed ml-6 here */}
-            {item.submenu.map((sub) => (
-              <Link
-                key={sub.href}
-                href={sub.href}
-                className={`px-6 py-2 rounded-md transition-all text-left hover:bg-sky-100 ${
-                  isActive(sub.href)
-                    ? 'bg-sky-100 text-sky-700 font-semibold'
-                    : ''
-                }`}
-              >
-                {sub.title}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-    ) : (
-      <Link
-        key={item.href}
-        href={item.href}
-        className={`flex items-center justify-between px-4 py-2 rounded-md transition ${
-          item.danger
-            ? 'text-red-600 hover:text-red-700'
-            : 'text-gray-600 hover:text-sky-700 hover:bg-gray-100'
-        } ${
-          isActive(item.href)
-            ? item.danger
-              ? 'text-red-600 font-semibold'
-              : 'bg-sky-100 text-sky-700 font-semibold'
-            : ''
-        }`}
-      >
-        <div className="flex items-center">
-          {item.icon}
-          <span>{item.title}</span>
-        </div>
-        <div className="w-[18px]" />
-      </Link>
-    )
-  )}
-</nav>
+            {menuItems.map((item) =>
+              item.submenu ? (
+                <div key={item.title}>
+                  <button
+                    onClick={() => toggleMenu(item.title)}
+                    className="flex items-center justify-between w-full text-gray-700 hover:text-sky-700 transition"
+                  >
+                    <div className="flex items-center">
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </div>
+                    {expandedMenus[item.title] ? (
+                      <ChevronDown size={18} />
+                    ) : (
+                      <ChevronRight size={18} />
+                    )}
+                  </button>
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      expandedMenus[item.title] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <div className="mt-2 flex flex-col space-y-1 text-gray-700">
+                      {item.submenu.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className={`px-6 py-2 rounded-md transition-all text-left hover:bg-sky-100 ${
+                            isActive(sub.href)
+                              ? 'bg-sky-100 text-sky-700 font-semibold'
+                              : ''
+                          }`}
+                        >
+                          {sub.title}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : item.title === 'Logout' ? (
+                <button
+                  key="logout"
+                  onClick={handleLogout}
+                  className="flex items-center justify-between px-4 py-2 rounded-md transition text-red-600 hover:text-red-700"
+                >
+                  <div className="flex items-center">
+                    {item.icon}
+                    <span>{item.title}</span>
+                  </div>
+                  <div className="w-[18px]" />
+                </button>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center justify-between px-4 py-2 rounded-md transition ${
+                    item.danger
+                      ? 'text-red-600 hover:text-red-700'
+                      : 'text-gray-600 hover:text-sky-700 hover:bg-gray-100'
+                  } ${
+                    isActive(item.href)
+                      ? item.danger
+                        ? 'text-red-600 font-semibold'
+                        : 'bg-sky-100 text-sky-700 font-semibold'
+                      : ''
+                  }`}
+                >
+                  <div className="flex items-center">
+                    {item.icon}
+                    <span>{item.title}</span>
+                  </div>
+                  <div className="w-[18px]" />
+                </Link>
+              )
+            )}
+          </nav>
         </div>
       </aside>
 

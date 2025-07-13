@@ -14,6 +14,18 @@ import {
   LogOut,
 } from 'lucide-react';
 
+const handleLogout = async () => {
+  try {
+    const res = await fetch('/api/logout');
+    if (res.ok) {
+      window.location.href = '/login';
+    }
+  } catch (error) {
+    console.error('Logout failed:', error);
+  }
+};
+
+
 export default function InstituteLayout({ children }) {
   const pathname = usePathname();
 
@@ -100,8 +112,9 @@ export default function InstituteLayout({ children }) {
             <Link
               href="/login"
               className="flex items-center text-sm text-red-600 hover:text-red-700 transition"
+               onClick={handleLogout}
             >
-              <LogOut size={18} className="mr-2" />
+              <LogOut size={18} className="mr-2"/>
               Log out
             </Link>
           </div>
