@@ -11,29 +11,36 @@ export async function GET(request) {
     }
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
-
     if (payload.role !== 'student') {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
     }
 
     const studentId = payload.id;
 
-    const [rows] = await db.query('SELECT * FROM students WHERE id = ?', [studentId]);
-    if (rows.length === 0) {
+    const [results] = await db.query(
+      `SELECT 
+         s.*, 
+         i.name AS institution_name, 
+         i.code AS institution_code
+       FROM students s
+       LEFT JOIN institutions i ON s.institution_id = i.id
+       WHERE s.id = ?`,
+      [studentId]
+    );
+
+    if (results.length === 0) {
       return new Response(JSON.stringify({ student: null }), { status: 200 });
     }
 
-    const student = rows[0];
+    const student = results[0];
 
-    // ✅ Format profile_pic as base64 string
     let profile_pic = null;
     if (student.profile_pic) {
       const buffer = Buffer.from(student.profile_pic);
       profile_pic = `data:image/jpeg;base64,${buffer.toString('base64')}`;
     }
 
-    // ✅ Only expose required fields
-    const baseData = {
+    const studentData = {
       name: student.name,
       father_name: student.father_name,
       roll_no: student.roll_no,
@@ -49,17 +56,17 @@ export async function GET(request) {
       section: student.section,
       student_type: student.student_type,
       payment_status: student.payment_status,
+      institution_name: student.institution_name,
+      institution_code: student.institution_code,
       profile_pic,
     };
 
-    // ✅ Include branch and batch only for Intermediate & College
     if (['Intermediate', 'College'].includes(student.student_type)) {
-      baseData.branch = student.branch;
-      baseData.batch = student.batch;
+      studentData.branch = student.branch;
+      studentData.batch = student.batch;
     }
 
-    return Response.json({ student: baseData });
-
+    return Response.json({ student: studentData });
   } catch (err) {
     console.error('Student fetch error:', err);
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });

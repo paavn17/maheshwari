@@ -7,6 +7,9 @@ import Image from 'next/image';
 export default function StudentDashboard() {
   const [student, setStudent] = useState(null);
 
+  console.log(student?.institution_name || null);
+
+
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -33,11 +36,26 @@ export default function StudentDashboard() {
     <StudentLayout>
       <div className="p-6">
         <div className="p-4 rounded space-y-4">
-          <h2 className="text-xl font-semibold text-sky-700">Your Details</h2>
+          {/* Header and institution details */}
+          <div className="space-y-1 mb-4">
+            <h2 className="text-xl font-semibold text-sky-700">Your Details</h2>
+            {student.institution_name && (
+              <p className="text-sm text-gray-700">
+                <strong>Institution:</strong> {student.institution_name} ({student.institution_code})
+              </p>
+            )}
+          </div>
 
+          {/* Main info */}
           <div className="grid grid-cols-2 gap-4">
             {Object.entries(student).map(([key, val]) => {
-              if (key === 'selected_id' || key === 'payment_status') return null;
+              if (
+                key === 'selected_id' ||
+                key === 'payment_status' ||
+                key === 'institution_name' ||
+                key === 'institution_code'
+              )
+                return null;
 
               const label = key.replace(/_/g, ' ');
 
@@ -52,7 +70,7 @@ export default function StudentDashboard() {
                         width={100}
                         height={100}
                         className="rounded border object-cover"
-                         unoptimized
+                        unoptimized
                       />
                     </div>
                   </div>
@@ -74,6 +92,7 @@ export default function StudentDashboard() {
             })}
           </div>
 
+          {/* Payment Status */}
           <div className="mt-4">
             <label className="block text-sm text-gray-600">Payment Status</label>
             <span
@@ -85,6 +104,7 @@ export default function StudentDashboard() {
             </span>
           </div>
 
+          {/* Disabled actions */}
           <div className="mt-6 space-x-4">
             <button
               className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
@@ -93,7 +113,9 @@ export default function StudentDashboard() {
               Pay Now
             </button>
             <button
-              onClick={() => alert(`Downloading card: ${student.selected_id || 'Selected ID not found'}`)}
+              onClick={() =>
+                alert(`Downloading card: ${student.selected_id || 'Selected ID not found'}`)
+              }
               className="bg-sky-600 text-white px-4 py-2 rounded disabled:opacity-50"
               disabled={student.payment_status !== 'paid'}
             >

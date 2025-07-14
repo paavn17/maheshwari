@@ -46,7 +46,8 @@ export async function POST(req) {
         id: user.id,
         role,
         name: user.name,
-        email: user.email || user.roll_no || user.emp_id
+        email: user.email || user.roll_no || user.emp_id,
+        institution_id: user.institution_id
       },
       JWT_SECRET,
       {

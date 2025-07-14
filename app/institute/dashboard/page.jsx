@@ -2,41 +2,31 @@
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/institute/page-layout';
-import { getStudentsByCollege } from '@/lib/fetchers/getStudents';
 
 export default function InstituteDashboardPage() {
   const [students, setStudents] = useState([]);
   const [stats, setStats] = useState(null);
-
-  const college = {
-    name: 'Vignan Institute of Technology',
-    code: 'VGN01',
-  };
+  const [institution, setInstitution] = useState(null);
 
   useEffect(() => {
-    async function load() {
-      const fetchedStudents = await getStudentsByCollege(college.name);
-      setStudents(fetchedStudents);
+  async function load() {
+    const res = await fetch('/api/institute/dashboard');
+    const data = await res.json();
 
-      const paid = fetchedStudents.filter((s) => s.payment_status === 'paid').length;
-      const unpaid = fetchedStudents.length - paid;
-      const noImage = fetchedStudents.filter((s) => !s.image || s.image === '').length;
-
-      const branches = [...new Set(fetchedStudents.map((s) => s.branch))];
-      const years = [...new Set(fetchedStudents.map((s) => s.year))].sort();
-
-      setStats({
-        totalStudents: fetchedStudents.length,
-        paid,
-        unpaid,
-        noImage,
-        totalBranches: branches.length,
-        uniqueYears: years,
-      });
+    if (res.ok) {
+      setStudents(data.students);
+      setStats(data.stats);
+      if (data.institution) {
+        setInstitution(data.institution); // ✅ use this instead of student[0]
+      }
+    } else {
+      console.error('Failed to load dashboard:', data.error);
     }
+  }
 
-    load();
-  }, []);
+  load();
+}, []);
+
 
   if (!stats) {
     return (
@@ -46,16 +36,25 @@ export default function InstituteDashboardPage() {
     );
   }
 
+  // Compute extra breakdowns
+  const studentTypeCounts = students.reduce((acc, student) => {
+    const type = student.student_type || 'Unknown';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+
+  const genderCounts = students.reduce((acc, student) => {
+    const gender = student.gender || 'Not Specified';
+    acc[gender] = (acc[gender] || 0) + 1;
+    return acc;
+  }, {});
+
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-semibold mb-4 text-sky-800">🏫 Institute Dashboard</h1>
-
-        {/* College Info */}
-        <div className="bg-white p-4 rounded shadow border">
-          <h2 className="text-xl font-semibold mb-2">{college.name}</h2>
-          <p className="text-gray-600">Code: <strong>{college.code}</strong></p>
-        </div>
+        <h1 className="text-2xl font-bold text-sky-800">
+          🏫 {institution?.name || 'Your Institution'} ({institution?.code || 'Code'})
+        </h1>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -71,13 +70,37 @@ export default function InstituteDashboardPage() {
           <h3 className="text-lg font-semibold mb-2 text-sky-700">📊 Year-wise Student Count</h3>
           <ul className="list-disc ml-6 text-sm text-gray-700">
             {stats.uniqueYears.map((year, i) => {
-              const count = students.filter((s) => s.year === year).length;
+              const count = students.filter((s) => s.class === year).length;
               return (
                 <li key={i}>
                   {year}: {count} student{count !== 1 ? 's' : ''}
                 </li>
               );
             })}
+          </ul>
+        </div>
+
+        {/* Student Type Breakdown */}
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-2 text-sky-700">🎓 Student Type</h3>
+          <ul className="list-disc ml-6 text-sm text-gray-700">
+            {Object.entries(studentTypeCounts).map(([type, count]) => (
+              <li key={type}>
+                {type}: {count}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Gender Breakdown */}
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-2 text-sky-700">🧑‍🤝‍🧑 Gender Distribution</h3>
+          <ul className="list-disc ml-6 text-sm text-gray-700">
+            {Object.entries(genderCounts).map(([gender, count]) => (
+              <li key={gender}>
+                {gender}: {count}
+              </li>
+            ))}
           </ul>
         </div>
       </div>
