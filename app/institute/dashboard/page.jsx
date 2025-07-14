@@ -52,9 +52,19 @@ export default function InstituteDashboardPage() {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-bold text-sky-800">
-          🏫 {institution?.name || 'Your Institution'} ({institution?.code || 'Code'})
-        </h1>
+        <div className="flex items-center gap-3 mb-2">
+  {institution?.logo && (
+    <img
+      src={institution.logo}
+      alt="Institution Logo"
+      className="h-10 w-10 object-contain rounded"
+    />
+  )}
+  <h1 className="text-2xl font-bold text-sky-800">
+     {institution?.name || 'Your Institution'} ({institution?.code || 'Code'})
+  </h1>
+</div>
+
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

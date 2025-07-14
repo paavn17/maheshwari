@@ -46,6 +46,11 @@ export default function InstituteLayout({ children }) {
       icon: <UserPlus size={18} className="mr-2" />,
     },
     {
+      label: 'Update Students Data',
+      href: '/institute/dashboard/update-student',
+      icon: <UploadCloud size={18} className="mr-2" />,
+    },
+    {
       label: 'Update Profile',
       href: '/institute/dashboard/update-profile',
       icon: <UserCircle size={18} className="mr-2" />,

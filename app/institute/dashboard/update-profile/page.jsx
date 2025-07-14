@@ -1,78 +1,96 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import InstituteLayout from '@/components/institute/page-layout';
 
-const dummyProfile = {
-  name: 'Vignan Institute of Technology',
-  code: 'VGN01',
-  email: 'contact@vignan.edu.in',
-  phone: '9876543210',
-  address: 'Guntur, Andhra Pradesh, India',
-  principal: 'Dr. S. Ramesh',
-};
-
 export default function Page() {
-  const [profile, setProfile] = useState(dummyProfile);
+  const [profile, setProfile] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [status, setStatus] = useState('');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const res = await fetch('/api/institute/profile');
+      const data = await res.json();
+      if (res.ok) setProfile(data.profile);
+    };
+    fetchProfile();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    console.log('Updated Profile:', profile);
-    setEditMode(false);
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfile((prev) => ({ ...prev, logo: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
+
+  const handleSave = async () => {
+    const res = await fetch('/api/institute/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setStatus('✅ Profile updated successfully.');
+      setEditMode(false);
+    } else {
+      setStatus(`❌ ${data.error || 'Failed to update profile.'}`);
+    }
+  };
+
+  if (!profile) {
+    return (
+      <InstituteLayout>
+        <div className="p-6">Loading...</div>
+      </InstituteLayout>
+    );
+  }
 
   return (
     <InstituteLayout>
       <div className="p-6 max-w-3xl bg-sky-50 rounded shadow space-y-6">
         <h1 className="text-2xl font-semibold text-sky-800">Update Institute Profile</h1>
 
-        {/* FORM */}
+        {status && <p className="text-sm text-sky-700">{status}</p>}
+
+        {/* Logo Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+          {editMode ? (
+            <input type="file" accept="image/*" onChange={handleLogoChange} />
+          ) : null}
+          {profile.logo && (
+            <div className="mt-2">
+              <img
+                src={profile.logo}
+                alt="Institution Logo"
+                className="h-16 rounded border"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* FORM FIELDS */}
         <div className="space-y-4">
-          <FormRow
-            label="Institute Name"
-            name="name"
-            value={profile.name}
-            editable={false}
-          />
-          <FormRow
-            label="Institute Code"
-            name="code"
-            value={profile.code}
-            editable={false}
-          />
-          <FormRow
-            label="Email"
-            name="email"
-            value={profile.email}
-            onChange={handleChange}
-            editable={editMode}
-          />
-          <FormRow
-            label="Phone Number"
-            name="phone"
-            value={profile.phone}
-            onChange={handleChange}
-            editable={editMode}
-          />
-          <FormRow
-            label="Address"
-            name="address"
-            value={profile.address}
-            onChange={handleChange}
-            editable={editMode}
-          />
-          <FormRow
-            label="Principal Name"
-            name="principal"
-            value={profile.principal}
-            onChange={handleChange}
-            editable={editMode}
-          />
+          <FormRow label="Institute Name" name="name" value={profile.name} editable={false} />
+          <FormRow label="Institute Code" name="code" value={profile.code} editable={false} />
+          <FormRow label="Email" name="email" value={profile.email} onChange={handleChange} editable={editMode} />
+          <FormRow label="Phone Number" name="phone" value={profile.phone} onChange={handleChange} editable={editMode} />
+          <FormRow label="Address" name="address" value={profile.address} onChange={handleChange} editable={editMode} />
+          <FormRow label="State" name="state" value={profile.state} onChange={handleChange} editable={editMode} />
+          <FormRow label="City" name="city" value={profile.city} onChange={handleChange} editable={editMode} />
+          <FormRow label="Pincode" name="pincode" value={profile.pincode} onChange={handleChange} editable={editMode} />
+          <FormRow label="Type" name="type" value={profile.type} onChange={handleChange} editable={editMode} />
         </div>
 
         {/* BUTTONS */}
@@ -115,7 +133,7 @@ function FormRow({ label, name, value, onChange, editable }) {
         <input
           type="text"
           name={name}
-          value={value}
+          value={value || ''}
           onChange={onChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
         />

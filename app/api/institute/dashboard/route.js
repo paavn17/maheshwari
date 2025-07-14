@@ -19,13 +19,14 @@ export async function GET(req) {
     const adminId = payload.id;
 
     // ✅ Fetch admin's institution details with JOIN
-    const [adminRows] = await db.query(
-      `SELECT i.id AS institution_id, i.name AS institution_name, i.code AS institution_code
-       FROM institution_admins a
-       JOIN institutions i ON a.institution_id = i.id
-       WHERE a.id = ?`,
-      [adminId]
-    );
+   const [adminRows] = await db.query(
+  `SELECT i.id AS institution_id, i.name AS institution_name, i.code AS institution_code, i.logo
+   FROM institution_admins a
+   JOIN institutions i ON a.institution_id = i.id
+   WHERE a.id = ?`,
+  [adminId]
+);
+
 
     if (adminRows.length === 0) {
       return new Response(JSON.stringify({ error: 'Institution not found for admin' }), { status: 404 });
@@ -50,10 +51,14 @@ export async function GET(req) {
 
     return Response.json({
       institution: {
-        id: institution.institution_id,
-        name: institution.institution_name,
-        code: institution.institution_code,
-      },
+      id: institution.institution_id,
+      name: institution.institution_name,
+      code: institution.institution_code,
+      logo: institution.logo 
+        ? `data:image/jpeg;base64,${Buffer.from(institution.logo).toString('base64')}`
+        : null,
+    },
+
       stats: {
         totalStudents,
         paid,
