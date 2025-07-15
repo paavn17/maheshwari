@@ -20,7 +20,6 @@ export default function AddStudentsPage() {
     class: '',
     section: '',
     branch: '',
-    batch: '',
     student_type: '', // School / Intermediate / College
   };
 

@@ -12,7 +12,7 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
     }
 
-    const { start_year, end_year, branch, name } = await req.json();
+    const { start_year, end_year, branch, name, roll_no } = await req.json();
 
     // Get institution_id
     const [adminRows] = await db.query(
@@ -44,9 +44,24 @@ export async function POST(req) {
       query += ' AND name LIKE ?';
       params.push(`%${name}%`);
     }
+    if (roll_no) {
+      query += ' AND roll_no LIKE ?';
+      params.push(`%${roll_no}%`);
+    }
 
     const [rows] = await db.query(query, params);
-    return Response.json({ students: rows });
+
+    // Convert profile_pic BLOB to base64
+    const students = rows.map((student) => {
+      if (student.profile_pic) {
+        student.profile_pic = `data:image/jpeg;base64,${Buffer.from(student.profile_pic).toString('base64')}`;
+      } else {
+        student.profile_pic = null;
+      }
+      return student;
+    });
+
+    return Response.json({ students });
 
   } catch (err) {
     console.error('Fetch students error:', err);

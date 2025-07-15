@@ -1,38 +1,32 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/components/admin/page-layout';
 import { Pencil, Check, X, Power } from 'lucide-react';
 
-const dummyAdmins = [
-  {
-    id: 1,
-    name: 'Ravi Kumar',
-    email: 'ravi@example.com',
-    college_code: 'VIGN001',
-    status: 'active',
-  },
-  {
-    id: 2,
-    name: 'Pooja Shah',
-    email: 'pooja@example.com',
-    college_code: 'VIGN002',
-    status: 'inactive',
-  },
-  {
-    id: 3,
-    name: 'Arun Verma',
-    email: 'arun@example.com',
-    college_code: 'VIGN001',
-    status: 'active',
-  },
-];
-
 const Page = () => {
-  const [admins, setAdmins] = useState(dummyAdmins);
+  const [admins, setAdmins] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
   const [search, setSearch] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function loadAdmins() {
+      try {
+        const res = await fetch('/api/superadmin/admins');
+        const data = await res.json();
+        console.log
+        if (res.ok) setAdmins(data.admins);
+        else setError(data.error || 'Failed to fetch admins');
+      } catch (err) {
+        console.error(err);
+        setError('Unable to load admin data');
+      }
+    }
+
+    loadAdmins();
+  }, []);
 
   const handleEdit = (admin) => {
     setEditingId(admin.id);
@@ -44,31 +38,28 @@ const Page = () => {
     setEditData({});
   };
 
-  const handleSave = () => {
-    setAdmins((prev) =>
-      prev.map((admin) => (admin.id === editingId ? editData : admin))
-    );
-    handleCancel();
+  const handleSave = async () => {
+    try {
+      const res = await fetch('/api/superadmin/admins/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editData),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+
+      setAdmins((prev) =>
+        prev.map((admin) => (admin.id === editingId ? { ...admin, ...editData } : admin))
+      );
+      handleCancel();
+    } catch (err) {
+      console.error(err);
+      alert('⚠️ Failed to update admin');
+    }
   };
 
   const handleChange = (field, value) => {
     setEditData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const toggleStatus = (id) => {
-    setAdmins((prev) =>
-      prev.map((admin) =>
-        admin.id === id
-          ? {
-              ...admin,
-              status: admin.status === 'active' ? 'inactive' : 'active',
-            }
-          : admin
-      )
-    );
-    if (editingId === id) {
-      handleCancel();
-    }
   };
 
   const groupedAdmins = useMemo(() => {
@@ -76,7 +67,7 @@ const Page = () => {
     admins.forEach((admin) => {
       if (
         search === '' ||
-        admin.college_code.toLowerCase().includes(search.toLowerCase())
+        admin.college_code?.toLowerCase().includes(search.toLowerCase())
       ) {
         if (!groups[admin.college_code]) groups[admin.college_code] = [];
         groups[admin.college_code].push(admin);
@@ -88,6 +79,8 @@ const Page = () => {
   return (
     <DashboardLayout>
       <h1 className="text-2xl font-semibold text-gray-800 mb-4">Admin Details</h1>
+
+      {error && <p className="text-red-600 mb-4">{error}</p>}
 
       <input
         type="text"
@@ -106,9 +99,12 @@ const Page = () => {
             <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
               <thead className="bg-sky-200 text-gray-700 text-left text-sm">
                 <tr>
+                  <th className="px-6 py-3">Logo</th>
                   <th className="px-6 py-3">#</th>
                   <th className="px-6 py-3">Name</th>
                   <th className="px-6 py-3">Email</th>
+                  <th className="px-6 py-3">Password</th>
+                  <th className="px-6 py-3">Phone</th>
                   <th className="px-6 py-3">Status</th>
                   <th className="px-6 py-3">Actions</th>
                 </tr>
@@ -116,15 +112,25 @@ const Page = () => {
               <tbody className="text-sm text-gray-800">
                 {adminsList.map((admin, idx) => {
                   const isEditing = editingId === admin.id;
-                  const isActive = admin.status === 'active';
+                  const isActive = admin.account_status === 'Live';
 
                   return (
                     <tr
                       key={admin.id}
-                      className={`border-t ${
-                        isActive ? 'bg-white' : 'bg-gray-100 text-gray-400'
-                      }`}
+                      className={`border-t ${isActive ? 'bg-white' : 'bg-gray-100 text-gray-400'}`}
                     >
+                      <td className="px-6 py-3">
+                        {admin.institution_logo ? (
+                          <img
+                            src={admin.institution_logo}
+                            alt="Logo"
+                            className="h-8 w-8 object-contain rounded"
+                          />
+                        ) : (
+                          <span className="text-gray-400">No Logo</span>
+                        )}
+                      </td>
+
                       <td className="px-6 py-3">{idx + 1}</td>
                       <td className="px-6 py-3">
                         {isEditing ? (
@@ -151,10 +157,35 @@ const Page = () => {
                         )}
                       </td>
                       <td className="px-6 py-3">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editData.password}
+                          onChange={(e) => handleChange('password', e.target.value)}
+                          className="border rounded px-2 py-1 text-sm w-full"
+                        />
+                      ) : (
+                        <span className="font-mono text-gray-700">{admin.password}</span>
+                      )}
+                    </td>
+
+                      <td className="px-6 py-3">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editData.phone}
+                            onChange={(e) => handleChange('phone', e.target.value)}
+                            className="border rounded px-2 py-1 text-sm w-full"
+                          />
+                        ) : (
+                          admin.phone
+                        )}
+                      </td>
+                      <td className="px-6 py-3">
                         {isActive ? (
                           <div className="flex items-center gap-2">
                             <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                            <span className="text-green-700 font-medium">Active</span>
+                            <span className="text-green-700 font-medium">Live</span>
                           </div>
                         ) : (
                           <span className="text-gray-400">Inactive</span>
@@ -187,17 +218,6 @@ const Page = () => {
                               </button>
                             )
                           )}
-                          <button
-                            onClick={() => toggleStatus(admin.id)}
-                            className={`p-1 rounded ${
-                              isActive
-                                ? 'text-red-500 hover:text-red-700'
-                                : 'text-green-500 hover:text-green-700'
-                            }`}
-                            title={isActive ? 'Deactivate' : 'Activate'}
-                          >
-                            <Power size={16} />
-                          </button>
                         </div>
                       </td>
                     </tr>

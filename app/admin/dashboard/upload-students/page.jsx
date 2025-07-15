@@ -1,151 +1,140 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import InstituteLayout from '@/components/institute/page-layout';
 import * as XLSX from 'xlsx';
 import DashboardLayout from '@/components/admin/page-layout';
-import { addStudent, addStudentsBulk } from '@/lib/fetchers/getStudents';
 
-export default function AddStudentsPage() {
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    college_code: '',
-    college_name: '',
-    roll_no: '',
-    year: '',
-    mobile: '',
-    branch: '',
-  });
+export default function UploadStudentsPage() {
+  const [institutions, setInstitutions] = useState([]);
+  const [institutionId, setInstitutionId] = useState('');
+  const [students, setStudents] = useState([]);
+  const [status, setStatus] = useState('');
+  const [editMode, setEditMode] = useState(false);
 
-  const [fileData, setFileData] = useState(null);
-  const [statusMessage, setStatusMessage] = useState('');
-  const fileInputRef = useRef(null);
+  useEffect(() => {
+    fetch('/api/superadmin/institutions')
+      .then((res) => res.json())
+      .then((data) => setInstitutions(data.institutions || []))
+      .catch((err) => console.error('Failed to load institutions:', err));
+  }, []);
 
-  const handleInputChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const isFormValid = () => {
-    return Object.values(formData).every((value) => value.trim() !== '');
-  };
-
-  const handleManualSubmit = async () => {
-    if (!isFormValid()) {
-      setStatusMessage(' Please fill in all fields before submitting.');
-      return;
-    }
-    setStatusMessage('Adding student...');
-    await addStudent(formData);
-    setStatusMessage(' Student added successfully!');
-    setFormData({
-      first_name: '',
-      last_name: '',
-      college_code: '',
-      college_name: '',
-      roll_no: '',
-      year: '',
-      mobile: '',
-      branch: '',
-    });
-  };
-
-  const handleFileChange = (e) => {
+  const handleExcelUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = evt.target.result;
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(sheet);
-      setFileData(json);
-      setStatusMessage(`📄 Loaded ${json.length} students from Excel.`);
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+      setStudents(rows);
     };
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
-  const handleBulkUpload = async () => {
-    if (!fileData || fileData.length === 0) {
-      setStatusMessage(' Please upload a valid Excel file.');
-      return;
+  const handleSaveAll = async () => {
+    try {
+      const res = await fetch('/api/superadmin/students/bulk-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ institution_id: institutionId, students }),
+      });
+      const data = await res.json();
+      if (res.ok) setStatus('✅ Uploaded successfully.');
+      else setStatus(`❌ ${data.error}`);
+    } catch (err) {
+      console.error('Upload error:', err);
+      setStatus('❌ Failed to upload.');
     }
-    setStatusMessage('Uploading students...');
-    await addStudentsBulk(fileData);
-    setStatusMessage(' Upload successful!');
-    setFileData(null);
-    fileInputRef.current.value = null;
+  };
+
+  const handleFieldChange = (index, field, value) => {
+    const updated = [...students];
+    updated[index][field] = value;
+    setStudents(updated);
   };
 
   return (
     <DashboardLayout>
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-6">Add Student Data</h1>
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-semibold text-sky-800">Super Admin Upload Students</h1>
 
-        {/* Manual Entry */}
-        <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Manually Add a Student</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
-            {Object.entries(formData).map(([key, value]) => (
-              <div key={key}>
-                <label className="block text-gray-700 mb-1 capitalize">
-                  {key.replace('_', ' ')}:
-                </label>
-                <input
-                  type="text"
-                  name={key}
-                  value={value}
-                  onChange={handleInputChange}
-                  className="p-2 border border-gray-300 rounded w-full"
-                  placeholder={`Enter ${key.replace('_', ' ')}`}
-                />
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={handleManualSubmit}
-            className="mt-4 bg-sky-400 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
+        {/* Select College */}
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <select
+            className="p-2 border rounded w-full sm:w-auto"
+            value={institutionId}
+            onChange={(e) => setInstitutionId(e.target.value)}
           >
-            Add Student
-          </button>
-        </div>
+            <option value="">Select Institution</option>
+            {institutions.map((inst) => (
+              <option key={inst.id} value={inst.id}>{inst.name}</option>
+            ))}
+          </select>
 
-        {/* Excel Upload */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Upload Excel File</h2>
-
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          {institutionId && (
             <input
               type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileChange}
-              ref={fileInputRef}
-              onClick={() => {
-                fileInputRef.current.value = null; // keep this as you had
-              }}
-              className="file:mr-4 file:py-2 file:px-4
-                        file:rounded file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-sky-200 file:text-gray-700
-                        hover:file:bg-sky-300
-                        max-w-xs"
-        />
+              accept=".xlsx,.xls"
+              onChange={handleExcelUpload}
+              className="p-2 border rounded"
+            />
+          )}
+        </div>
 
-    <button
-      onClick={handleBulkUpload}
-      className="bg-sky-400 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
-    >
-      Upload File
-    </button>
-  </div>
-</div>
+        {/* Table */}
+        {students.length > 0 && (
+          <>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setEditMode(!editMode)}
+                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                {editMode ? 'Cancel' : 'Edit'}</button>
+            </div>
 
-        {/* Status Message */}
-        {statusMessage && (
-          <p className="text-sm mt-4 font-medium text-sky-700">{statusMessage}</p>
+            <div className="overflow-auto border rounded shadow">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    {Object.keys(students[0]).filter(k => k !== 'student_type').map((field) => (
+                      <th key={field} className="px-3 py-2 border-b text-left whitespace-nowrap">{field}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student, i) => (
+                    <tr key={i} className="odd:bg-white even:bg-gray-50">
+                      {Object.entries(student).filter(([k]) => k !== 'student_type').map(([key, val]) => (
+                        <td key={key} className="px-3 py-2 border-b min-w-[140px]">
+                          {editMode ? (
+                            <input
+                              type="text"
+                              value={val || ''}
+                              onChange={(e) => handleFieldChange(i, key, e.target.value)}
+                              className="w-full bg-transparent outline-none"
+                            />
+                          ) : (
+                            <span>{val}</span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <button
+              onClick={handleSaveAll}
+              className="mt-4 bg-sky-600 text-white px-6 py-2 rounded hover:bg-sky-700"
+            >
+              Upload Students
+            </button>
+
+            {status && <p className="text-sm text-sky-700 mt-2">{status}</p>}
+          </>
         )}
       </div>
     </DashboardLayout>

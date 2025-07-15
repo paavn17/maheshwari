@@ -18,13 +18,18 @@ export async function POST(req) {
     }
 
     for (const student of students) {
-      const { id, ...fields } = student;
+      const { id, profile_pic, ...fields } = student;
       if (!id) continue;
 
-      // Clean null values
       const clean = Object.fromEntries(
         Object.entries(fields).filter(([_, v]) => v !== null && v !== undefined)
       );
+
+      // Handle base64 image upload
+      if (profile_pic && profile_pic.startsWith('data:image')) {
+        const base64Data = profile_pic.split(',')[1];
+        clean.profile_pic = Buffer.from(base64Data, 'base64');
+      }
 
       await db.query('UPDATE students SET ? WHERE id = ?', [clean, id]);
     }
