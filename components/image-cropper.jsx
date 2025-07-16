@@ -5,8 +5,8 @@ import Cropper from 'react-easy-crop';
 import { Slider } from '@mui/material';
 import getCroppedImg from '@/utils/cropImage';
 
-export default function ImageCropper({ onCropComplete = () => {} }) {
-  const [step, setStep] = useState('front'); // 'front' -> 'back' -> 'done'
+export default function ImageCropper() {
+  const [step, setStep] = useState('front');
   const [image, setImage] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -16,6 +16,8 @@ export default function ImageCropper({ onCropComplete = () => {} }) {
   const [backImage, setBackImage] = useState(null);
   const [frontBlob, setFrontBlob] = useState(null);
   const [backBlob, setBackBlob] = useState(null);
+  const [designName, setDesignName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onFileChange = (e) => {
     const file = e.target.files[0];
@@ -40,16 +42,16 @@ export default function ImageCropper({ onCropComplete = () => {} }) {
         setFrontImage(previewUrl);
         setFrontBlob(blob);
         setStep('back');
-        setImage(null); // reset for next upload
+        setImage(null);
       } else if (step === 'back') {
         setBackImage(previewUrl);
         setBackBlob(blob);
         setStep('done');
         setImage(null);
-        onCropComplete({ front: blob, back: blob });
       }
     } catch (err) {
       console.error('Cropping failed:', err);
+      alert('Cropping failed. Check console.');
     }
   };
 
@@ -61,10 +63,75 @@ export default function ImageCropper({ onCropComplete = () => {} }) {
     setFrontBlob(null);
     setBackBlob(null);
     setZoom(1);
+    setDesignName('');
+  };
+
+  const handleSubmitDesign = async () => {
+    if (!designName || !frontBlob || !backBlob) {
+      alert('Missing design name or images.');
+      return;
+    }
+
+    const toBase64 = (blob) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result); // base64 string
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    };
+
+    setIsSubmitting(true);
+
+    try {
+      const frontBase64 = await toBase64(frontBlob);
+      const backBase64 = await toBase64(backBlob);
+
+      console.log('🟡 Submitting design:', {
+        name: designName,
+        front_img: frontBase64.substring(0, 30) + '...',
+        back_img: backBase64.substring(0, 30) + '...',
+      });
+
+      const res = await fetch('/api/superadmin/card-designs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: designName,
+          front_img: frontBase64,
+          back_img: backBase64,
+        }),
+      });
+
+      const text = await res.text();
+      console.log('🟢 Server Response Text:', text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('🔴 Failed to parse JSON:', e);
+        alert('Invalid server response. Check console.');
+        return;
+      }
+
+      if (data.success) {
+        alert('✅ Design uploaded successfully!');
+        handleReset();
+      } else {
+        alert(`⚠️ Upload failed: ${data.error || 'Unknown error'}`);
+        console.error('Backend error:', data);
+      }
+    } catch (err) {
+      console.error('🔴 Upload error:', err);
+      alert('Upload failed. See console for details.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="max-w-xl  p-6 bg-white rounded-md shadow space-y-6">
+    <div className="max-w-xl mx-auto p-6 bg-white rounded-md shadow space-y-6">
       {step !== 'done' && !image && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
@@ -90,7 +157,7 @@ export default function ImageCropper({ onCropComplete = () => {} }) {
               image={image}
               crop={crop}
               zoom={zoom}
-              aspect={2 / 3} // 200x300 = 2:3
+              aspect={2 / 3}
               onCropChange={setCrop}
               onZoomChange={setZoom}
               onCropComplete={onCrop}
@@ -150,11 +217,26 @@ export default function ImageCropper({ onCropComplete = () => {} }) {
               />
             </div>
           </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Enter Design Name:
+            </label>
+            <input
+              type="text"
+              value={designName}
+              onChange={(e) => setDesignName(e.target.value)}
+              placeholder="e.g. Modern Blue"
+              className="w-full border px-3 py-2 rounded"
+            />
+          </div>
+
           <button
-            onClick={() => onCropComplete({ front: frontBlob, back: backBlob })}
-            className="w-full bg-sky-600 text-white py-2 rounded hover:bg-sky-800 transition"
+            onClick={handleSubmitDesign}
+            disabled={isSubmitting || !designName}
+            className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-800 transition disabled:opacity-50"
           >
-            Submit Both Images
+            {isSubmitting ? 'Uploading...' : 'Upload Design to Database'}
           </button>
         </div>
       )}

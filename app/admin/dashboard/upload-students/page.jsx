@@ -63,7 +63,7 @@ export default function UploadStudentsPage() {
         {/* Select College */}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <select
-            className="p-2 border rounded w-full sm:w-auto"
+            className="p-2 border rounded w-full sm:w-[300px] lg:w-[400px]"
             value={institutionId}
             onChange={(e) => setInstitutionId(e.target.value)}
           >
