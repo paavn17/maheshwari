@@ -32,6 +32,11 @@ const menuItems = [
       { title: 'Card Master', href: '/admin/dashboard/card-master' },
     ],
   },
+    {
+    title: 'Add Admins',
+    href: '/admin/dashboard/add-admins',
+    icon: <CreditCard size={18} className="mr-2" />,
+  },
   {
     title: 'Payment Details',
     href: '/admin/dashboard/payment-details',
