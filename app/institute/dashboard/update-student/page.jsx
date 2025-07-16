@@ -200,12 +200,21 @@ export default function UpdateStudentsPage() {
                               )}
                             </div>
                           ) : editMode ? (
-                            <input
-                              type="text"
-                              value={val || ''}
-                              onChange={(e) => handleFieldChange(i, key, e.target.value)}
-                              className="w-full bg-transparent outline-none"
-                            />
+                            key === 'dob' ? (
+                              <input
+                                type="date"
+                                value={val || ''}
+                                onChange={(e) => handleFieldChange(i, key, e.target.value)}
+                                className="w-full bg-transparent outline-none"
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                value={val || ''}
+                                onChange={(e) => handleFieldChange(i, key, e.target.value)}
+                                className="w-full bg-transparent outline-none"
+                              />
+                            )
                           ) : (
                             <span>{val}</span>
                           )}

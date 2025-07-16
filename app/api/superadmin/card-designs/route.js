@@ -9,14 +9,11 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'Missing fields' }), { status: 400 });
     }
 
-    // Extract base64 from "data:image/jpeg;base64,..."
     const frontBase64 = front_img.split(',')[1];
     const backBase64 = back_img.split(',')[1];
-
     const frontBuffer = Buffer.from(frontBase64, 'base64');
     const backBuffer = Buffer.from(backBase64, 'base64');
 
-    // Insert into MySQL using raw query
     await db.query(
       'INSERT INTO card_designs (name, front_img, back_img) VALUES (?, ?, ?)',
       [name, frontBuffer, backBuffer]
@@ -24,11 +21,12 @@ export async function POST(req) {
 
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (err) {
-    console.error('❌ Internal Server Error:', err);
+    console.error('❌ Upload error:', err);
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
   }
 }
-export async function GET() {
+
+export async function GET(req) {
   try {
     const [rows] = await db.query('SELECT id, name, front_img, back_img FROM card_designs');
 
@@ -41,7 +39,7 @@ export async function GET() {
 
     return new Response(JSON.stringify({ cards }), { status: 200 });
   } catch (err) {
-    console.error('Failed to fetch card designs:', err);
+    console.error('❌ Fetch error:', err);
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
   }
 }

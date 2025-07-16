@@ -99,7 +99,7 @@ export default function DashboardLayout({ children }) {
       <aside className="sticky top-0 h-screen w-[240px] bg-white shadow-md flex flex-col justify-between">
         <div>
           {/* Logo & Title */}
-          <div className="flex flex-col items-center py-6">
+          <div className="flex flex-col items-center ">
             <Image
               src="/images/logo.png"
               alt="ID Card Logo"
@@ -113,7 +113,7 @@ export default function DashboardLayout({ children }) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex flex-col space-y-3 px-4 mt-10 text-sm font-medium">
+          <nav className="flex flex-col space-y-2 px-4 mt-10 text-sm font-medium">
             {menuItems.map((item) =>
               item.submenu ? (
                 <div key={item.title}>
