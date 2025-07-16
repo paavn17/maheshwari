@@ -1,234 +1,255 @@
-"use client";
+'use client';
 
-import InstituteLayout from "@/components/institute/page-layout";
-import { useState } from "react";
-import { Pencil, Check, X, Power, Plus } from "lucide-react";
+import React, { useState, useRef } from 'react';
+import * as XLSX from 'xlsx';
+import DashboardLayout from '@/components/institute/page-layout';
 
-const Page = () => {
-  const [employees, setEmployees] = useState([
-    { id: 1, name: "Suresh Reddy", email: "suresh@institute.com", role: "Manager", status: "Active" },
-    { id: 2, name: "Divya Sharma", email: "divya@institute.com", role: "Coordinator", status: "Inactive" },
-    { id: 3, name: "Vikram Rao", email: "vikram@institute.com", role: "Viewer", status: "Active" },
-  ]);
-
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", role: "" });
-  const [editingId, setEditingId] = useState(null);
-  const [errors, setErrors] = useState({});
-
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required.";
-    if (!formData.email.trim()) newErrors.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Invalid email format.";
-    if (!formData.role.trim()) newErrors.role = "Role is required.";
-    return newErrors;
+export default function UploadEmployeesPage() {
+  const initialForm = {
+    name: '',
+    father_name: '',
+    emp_id: '',
+    pf_no: '',
+    designation: '',
+    department: '',
+    doj: '',
+    dob: '',
+    gender: '',
+    mobile: '',
+    email: '',
+    adhaar_no: '',
+    blood_group: '',
+    identification: '',
+    address: '',
   };
 
-  const handleAdd = () => {
-    const validationErrors = validate();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length === 0) {
-      const newEmployee = {
-        id: employees.length + 1,
-        ...formData,
-        status: "Active",
-      };
-      setEmployees([...employees, newEmployee]);
-      console.log("Added Employee:", newEmployee);
-      setFormData({ name: "", email: "", role: "" });
-      setShowForm(false);
+  const requiredFields = ['name', 'emp_id', 'mobile'];
+
+  const [formData, setFormData] = useState(initialForm);
+  const [imageBase64, setImageBase64] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [fileData, setFileData] = useState([]);
+  const fileInputRef = useRef(null);
+
+  // Handle form input
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageBase64(reader.result);
+    };
+    reader.readAsDataURL(file); // converts to base64
+  };
+
+  const isFormValid = () =>
+    requiredFields.every((field) => formData[field]?.trim() !== '');
+
+  // Single upload submit
+  const handleManualSubmit = async () => {
+    if (!isFormValid()) {
+      setStatusMessage('❌ Please fill all required fields marked with *');
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      profile_pic: imageBase64,
+    };
+
+    setStatusMessage('⏳ Adding employee...');
+    try {
+      const res = await fetch('/api/institute/employees/add-single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      setStatusMessage(data.success ? '✅ Employee added successfully' : `❌ ${data.error}`);
+      setFormData(initialForm);
+      setImageBase64('');
+    } catch (err) {
+      console.error(err);
+      setStatusMessage('❌ Network error');
     }
   };
 
-  const handleEdit = (id) => {
-    const emp = employees.find((e) => e.id === id);
-    setEditingId(id);
-    setFormData({ name: emp.name, email: emp.email, role: emp.role });
+  // Handle Excel File Upload
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const workbook = XLSX.read(evt.target.result, { type: 'binary' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet);
+
+      const invalidRow = json.findIndex((row) =>
+        requiredFields.some((field) => !row[field]?.toString().trim())
+      );
+
+      if (invalidRow !== -1) {
+        setStatusMessage(`❌ Missing required fields in row ${invalidRow + 2}`);
+        setFileData([]);
+        return;
+      }
+
+      setFileData(json);
+      setStatusMessage(`📄 Loaded ${json.length} employees from Excel`);
+    };
+    reader.readAsBinaryString(file);
   };
 
-  const handleSave = () => {
-    const updated = employees.map((emp) =>
-      emp.id === editingId ? { ...emp, ...formData } : emp
-    );
-    setEmployees(updated);
-    console.log("Updated Employee:", formData);
-    setEditingId(null);
-    setFormData({ name: "", email: "", role: "" });
+  const handleCellChange = (index, field, value) => {
+    setFileData((prev) => {
+      const updated = [...prev];
+      updated[index][field] = value;
+      return updated;
+    });
   };
 
-  const toggleStatus = (id) => {
-    const updated = employees.map((emp) =>
-      emp.id === id ? { ...emp, status: emp.status === "Active" ? "Inactive" : "Active" } : emp
-    );
-    setEmployees(updated);
-    console.log("Toggled Status for Employee ID:", id);
+  const handleBulkUpload = async () => {
+    if (!fileData.length) {
+      setStatusMessage('❌ Please select a valid Excel file.');
+      return;
+    }
+
+    setStatusMessage('⏳ Uploading employees...');
+    try {
+      const res = await fetch('/api/institute/employees/bulk-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employees: fileData }),
+      });
+
+      const data = await res.json();
+      setStatusMessage(data.success ? '✅ Bulk upload successful!' : `❌ ${data.error}`);
+      setFileData([]);
+      fileInputRef.current.value = null;
+    } catch (err) {
+      console.error(err);
+      setStatusMessage('❌ Upload failed.');
+    }
   };
 
   return (
-    <InstituteLayout>
+    <DashboardLayout>
       <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-6 text-sky-800">Upload Employees</h1>
+        <h1 className="text-2xl font-bold text-sky-800 mb-6">📥 Upload Employee Data</h1>
 
-        <div className="mb-4 flex justify-end">
+        {/* Single Upload */}
+        <section>
+          <h2 className="text-xl font-semibold text-sky-700 mb-4">🔹 Add Single Employee</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-6xl">
+            {Object.entries(formData).map(([key, value]) => (
+              <div key={key}>
+                <label className="block text-sm text-gray-700 mb-1 capitalize">
+                  {key.replace(/_/g, ' ')} {requiredFields.includes(key) ? '*' : ''}
+                </label>
+                <input
+                  type={['dob', 'doj'].includes(key) ? 'date' : 'text'}
+                  name={key}
+                  value={value}
+                  onChange={handleInputChange}
+                  className="p-2 border border-gray-300 rounded w-full"
+                />
+              </div>
+            ))}
+
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Profile Picture</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="p-2 border border-gray-300 rounded w-full"
+              />
+              {imageBase64 && (
+                <img
+                  src={imageBase64}
+                  alt="Preview"
+                  className="mt-2 w-32 h-32 object-cover border rounded"
+                />
+              )}
+            </div>
+          </div>
+
           <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+            onClick={handleManualSubmit}
+            className="mt-4 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded shadow"
           >
-            <Plus size={16} /> {showForm ? "Cancel" : "Add Employee"}
+            ➕ Add Employee
           </button>
-        </div>
+        </section>
 
-        {showForm && (
-          <div className="bg-white p-4 rounded-lg shadow-md mb-6 space-y-4 max-w-xl">
-            <div>
-              <label className="block text-gray-700 mb-1 font-medium">Name</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2 border rounded-md"
-              />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-1 font-medium">Email</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-2 border rounded-md"
-              />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-1 font-medium">Role</label>
-              <input
-                type="text"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-4 py-2 border rounded-md"
-              />
-              {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role}</p>}
-            </div>
+        {/* Bulk Upload */}
+        <section className="mt-12">
+          <h2 className="text-xl font-semibold text-sky-700 mb-4">📑 Bulk Upload via Excel</h2>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-sky-200 file:text-gray-700 hover:file:bg-sky-300"
+            />
             <button
-              onClick={handleAdd}
-              className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-md"
+              onClick={handleBulkUpload}
+              className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
             >
-              Submit
+              ⬆️ Upload File
             </button>
           </div>
-        )}
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden text-sm">
-            <thead className="bg-sky-200 text-gray-700 text-left">
-              <tr>
-                <th className="px-6 py-3">#</th>
-                <th className="px-6 py-3">Name</th>
-                <th className="px-6 py-3">Email</th>
-                <th className="px-6 py-3">Role</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map((emp, idx) => {
-                const isEditing = editingId === emp.id;
-                return (
-                  <tr
-                    key={emp.id}
-                    className={`border-t transition hover:bg-gray-50 ${emp.status === "Inactive" ? "bg-red-50 text-gray-500" : ""}`}
-                  >
-                    <td className="px-6 py-3 font-medium">{idx + 1}</td>
-                    <td className="px-6 py-3">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="border px-2 py-1 rounded w-full"
-                        />
-                      ) : (
-                        emp.name
-                      )}
-                    </td>
-                    <td className="px-6 py-3">
-                      {isEditing ? (
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="border px-2 py-1 rounded w-full"
-                        />
-                      ) : (
-                        emp.email
-                      )}
-                    </td>
-                    <td className="px-6 py-3">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={formData.role}
-                          onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                          className="border px-2 py-1 rounded w-full"
-                        />
-                      ) : (
-                        emp.role
-                      )}
-                    </td>
-                    <td className="px-6 py-3">
-                      <span
-                        className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${emp.status === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+          {fileData.length > 0 && (
+            <div className="overflow-auto max-h-[500px] border border-gray-300 rounded shadow">
+              <table className="min-w-full text-sm table-fixed">
+                <thead className="bg-gray-100 sticky top-0 z-10">
+                  <tr>
+                    {Object.keys(fileData[0]).map((field) => (
+                      <th
+                        key={field}
+                        className="px-3 py-2 border-b text-left font-medium text-gray-700 min-w-[160px] truncate"
                       >
-                        {emp.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3">
-                      <div className="flex gap-2 items-center">
-                        {isEditing ? (
-                          <>
-                            <button
-                              onClick={handleSave}
-                              className="bg-green-500 hover:bg-green-600 text-white p-1 rounded"
-                            >
-                              <Check size={16} />
-                            </button>
-                            <button
-                              onClick={() => setEditingId(null)}
-                              className="bg-gray-300 hover:bg-gray-400 text-gray-800 p-1 rounded"
-                            >
-                              <X size={16} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleEdit(emp.id)}
-                              className="text-sky-600 hover:text-sky-800 p-1"
-                            >
-                              <Pencil size={16} />
-                            </button>
-                            <button
-                              onClick={() => toggleStatus(emp.id)}
-                              className={`p-1 rounded ${emp.status === "Active" ? "text-red-500 hover:text-red-700" : "text-green-500 hover:text-green-700"}`}
-                              title={emp.status === "Active" ? "Deactivate" : "Activate"}
-                            >
-                              <Power size={16} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                        {field.replace(/_/g, ' ')}
+                      </th>
+                    ))}
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </InstituteLayout>
-  );
-};
+                </thead>
+                <tbody>
+                  {fileData.map((row, index) => (
+                    <tr key={index} className="even:bg-white odd:bg-gray-50">
+                      {Object.entries(row).map(([field, value]) => (
+                        <td key={field} className="px-3 py-1 border-b align-top min-w-[160px]">
+                          <input
+                            type="text"
+                            value={value}
+                            onChange={(e) => handleCellChange(index, field, e.target.value)}
+                            className="w-full p-1 border border-gray-300 rounded bg-white text-sm"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
 
-export default Page;
+        {/* Status Message */}
+        {statusMessage && (
+          <p className="text-sm mt-6 font-medium text-sky-700">{statusMessage}</p>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}

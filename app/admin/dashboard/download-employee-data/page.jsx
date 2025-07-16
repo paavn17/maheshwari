@@ -4,41 +4,41 @@ import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/admin/page-layout';
 import * as XLSX from 'xlsx';
 
-export default function SuperAdminStudentsPage() {
+export default function SuperAdminEmployeesPage() {
   const [institutions, setInstitutions] = useState([]);
   const [selectedId, setSelectedId] = useState('');
-  const [students, setStudents] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
   const fetchInstitutions = async () => {
-    const res = await fetch('/api/superadmin/students/colleges');
+    const res = await fetch('/api/superadmin/employees/companies');
     const data = await res.json();
     if (data.success) setInstitutions(data.institutions);
   };
 
-  const fetchStudents = async (institution_id) => {
-    const res = await fetch('/api/superadmin/students/by-institution', {
+  const fetchEmployees = async (institution_id) => {
+    const res = await fetch('/api/superadmin/employees/by-institution', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ institution_id }),
     });
     const data = await res.json();
-    if (data.success) setStudents(data.students);
+    if (data.success) setEmployees(data.employees);
   };
 
   const handleInstitutionChange = (e) => {
     const id = e.target.value;
     setSelectedId(id);
-    if (id) fetchStudents(id);
-    else setStudents([]);
+    if (id) fetchEmployees(id);
+    else setEmployees([]);
   };
 
   const handleDownload = () => {
-    if (!students.length) return;
+    if (!employees.length) return;
 
-    const worksheet = XLSX.utils.json_to_sheet(students);
+    const worksheet = XLSX.utils.json_to_sheet(employees);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Students');
-    XLSX.writeFile(workbook, `students_${selectedId}.xlsx`);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees');
+    XLSX.writeFile(workbook, `employees_${selectedId}.xlsx`);
   };
 
   useEffect(() => {
@@ -48,10 +48,10 @@ export default function SuperAdminStudentsPage() {
   return (
     <DashboardLayout>
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-sky-800 mb-6">🎓 Student Viewer (By Institution)</h1>
+        <h1 className="text-2xl font-bold text-sky-800 mb-6">📋 Employee Viewer (By Company)</h1>
 
         <div className="flex gap-4 items-center mb-6">
-          <label className="text-gray-700 font-medium">Select Institution:</label>
+          <label className="text-gray-700 font-medium">Select Company:</label>
           <select
             value={selectedId}
             onChange={handleInstitutionChange}
@@ -67,37 +67,35 @@ export default function SuperAdminStudentsPage() {
 
           <button
             onClick={handleDownload}
-            disabled={!students.length}
+            disabled={!employees.length}
             className="ml-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
           >
             ⬇️ Download Excel
           </button>
         </div>
 
-        {students.length > 0 ? (
+        {employees.length > 0 ? (
           <div className="overflow-auto border border-gray-300 rounded shadow">
             <table className="min-w-full text-sm">
               <thead className="bg-gray-100 sticky top-0">
                 <tr>
                   <th className="px-3 py-2 text-left">Name</th>
-                  <th className="px-3 py-2 text-left">Roll No</th>
+                  <th className="px-3 py-2 text-left">Emp ID</th>
                   <th className="px-3 py-2 text-left">Mobile</th>
                   <th className="px-3 py-2 text-left">Email</th>
-                  <th className="px-3 py-2 text-left">Branch</th>
-                  <th className="px-3 py-2 text-left">Start Year</th>
-                  <th className="px-3 py-2 text-left">End Year</th>
+                  <th className="px-3 py-2 text-left">Designation</th>
+                  <th className="px-3 py-2 text-left">Department</th>
                 </tr>
               </thead>
               <tbody>
-                {students.map((s) => (
-                  <tr key={s.id} className="even:bg-white odd:bg-gray-50">
-                    <td className="px-3 py-2">{s.name}</td>
-                    <td className="px-3 py-2">{s.roll_no}</td>
-                    <td className="px-3 py-2">{s.mobile}</td>
-                    <td className="px-3 py-2">{s.email}</td>
-                    <td className="px-3 py-2">{s.branch}</td>
-                    <td className="px-3 py-2">{s.start_year || '-'}</td>
-                    <td className="px-3 py-2">{s.end_year || '-'}</td>
+                {employees.map((emp) => (
+                  <tr key={emp.id} className="even:bg-white odd:bg-gray-50">
+                    <td className="px-3 py-2">{emp.name}</td>
+                    <td className="px-3 py-2">{emp.emp_id}</td>
+                    <td className="px-3 py-2">{emp.mobile}</td>
+                    <td className="px-3 py-2">{emp.email}</td>
+                    <td className="px-3 py-2">{emp.designation}</td>
+                    <td className="px-3 py-2">{emp.department}</td>
                   </tr>
                 ))}
               </tbody>
@@ -105,7 +103,7 @@ export default function SuperAdminStudentsPage() {
           </div>
         ) : (
           selectedId && (
-            <p className="text-gray-500 italic mt-4">No students found for this institution.</p>
+            <p className="text-gray-500 italic mt-4">No employees found for this company.</p>
           )
         )}
       </div>

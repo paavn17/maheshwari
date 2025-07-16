@@ -46,9 +46,9 @@ const menuItems = [
     title: 'Reports',
     icon: <FileBarChart2 size={18} className="mr-2" />,
     submenu: [
-      { title: 'Organizationwise', href: '/admin/dashboard/organization-wise' },
       { title: 'Payment Report', href: '/admin/dashboard/payment-report' },
-      { title: 'Download Data', href: '/admin/dashboard/download-data' },
+      { title: 'Download Employees Data', href: '/admin/dashboard/download-employee-data' },
+      { title: 'Download Students Data', href: '/admin/dashboard/download-data' },
       { title: 'Card Designs', href: '/admin/dashboard/card-designs' },
     ],
   },
