@@ -122,7 +122,7 @@ export default function UploadEmployeesPage() {
       return;
     }
 
-    setStatusMessage('⏳ Uploading employees...');
+    setStatusMessage('⏳ Uploading employeAes...');
     try {
       const res = await fetch('/api/institute/employees/bulk-upload', {
         method: 'POST',

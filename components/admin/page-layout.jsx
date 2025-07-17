@@ -1,18 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
+  UserCog,
+  Upload,
   Users,
-  FileBarChart2,
-  CreditCard,
+  ImageIcon,
+  Layers,
+  PlusCircle,
+  FileText,
+  FileDown,
+  Badge,       // ✅ Replace IdBadge with Badge
   Lock,
   LogOut,
-  ChevronDown,
-  ChevronRight,
 } from 'lucide-react';
 
 const menuItems = [
@@ -22,35 +26,49 @@ const menuItems = [
     icon: <LayoutDashboard size={18} className="mr-2" />,
   },
   {
-    title: 'User Management',
-    icon: <Users size={18} className="mr-2" />,
-    submenu: [
-      { title: 'Admin Details', href: '/admin/dashboard/admin-details' },
-      { title: 'Upload Students Data', href: '/admin/dashboard/upload-students' },
-      { title: 'Upload Employee Data', href: '/admin/dashboard/upload-employees' },
-      { title: 'Upload Photo', href: '/admin/dashboard/upload-photos' },
-      { title: 'Card Master', href: '/admin/dashboard/card-master' },
-    ],
+    title: 'Admin Details',
+    href: '/admin/dashboard/admin-details',
+    icon: <UserCog size={18} className="mr-2" />,
   },
-    {
+  {
+    title: 'Upload Students Data',
+    href: '/admin/dashboard/upload-students',
+    icon: <Upload size={18} className="mr-2" />,
+  },
+  {
+    title: 'Upload Employee Data',
+    href: '/admin/dashboard/upload-employees',
+    icon: <Users size={18} className="mr-2" />,
+  },
+  {
+    title: 'Card Master',
+    href: '/admin/dashboard/card-master',
+    icon: <Layers size={18} className="mr-2" />,
+  },
+  {
     title: 'Add Admins',
     href: '/admin/dashboard/add-admins',
-    icon: <CreditCard size={18} className="mr-2" />,
+    icon: <PlusCircle size={18} className="mr-2" />,
   },
   {
     title: 'Payment Details',
     href: '/admin/dashboard/payment-details',
-    icon: <CreditCard size={18} className="mr-2" />,
+    icon: <FileText size={18} className="mr-2" />,
   },
   {
-    title: 'Reports',
-    icon: <FileBarChart2 size={18} className="mr-2" />,
-    submenu: [
-      { title: 'Payment Report', href: '/admin/dashboard/payment-report' },
-      { title: 'Download Employees Data', href: '/admin/dashboard/download-employee-data' },
-      { title: 'Download Students Data', href: '/admin/dashboard/download-data' },
-      { title: 'Card Designs', href: '/admin/dashboard/card-designs' },
-    ],
+    title: 'Download Employees Data',
+    href: '/admin/dashboard/download-employee-data',
+    icon: <FileDown size={18} className="mr-2" />,
+  },
+  {
+    title: 'Download Students Data',
+    href: '/admin/dashboard/download-data',
+    icon: <FileDown size={18} className="mr-2" />,
+  },
+  {
+    title: 'Card Designs',
+    href: '/admin/dashboard/card-designs',
+    icon: <Badge size={18} className="mr-2" />,
   },
   {
     title: 'Change Password',
@@ -67,27 +85,8 @@ const menuItems = [
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
-  const [expandedMenus, setExpandedMenus] = useState({});
-
-  const toggleMenu = (title) => {
-    setExpandedMenus((prev) => ({ ...prev, [title]: !prev[title] }));
-  };
 
   const isActive = (href) => pathname === href;
-
-  useEffect(() => {
-    const initiallyExpanded = {};
-    menuItems.forEach((item) => {
-      if (item.submenu) {
-        item.submenu.forEach((sub) => {
-          if (pathname.startsWith(sub.href)) {
-            initiallyExpanded[item.title] = true;
-          }
-        });
-      }
-    });
-    setExpandedMenus((prev) => ({ ...prev, ...initiallyExpanded }));
-  }, [pathname]);
 
   const handleLogout = async () => {
     try {
@@ -112,7 +111,7 @@ export default function DashboardLayout({ children }) {
               height={80}
               className="object-contain"
             />
-            <span className="mt-2 font-bold text-lg text-gray-800 text-center">
+            <span className=" font-bold text-lg text-gray-800 text-center">
               Maheshwari ID Cards
             </span>
           </div>
@@ -120,45 +119,7 @@ export default function DashboardLayout({ children }) {
           {/* Navigation */}
           <nav className="flex flex-col space-y-2 px-4 mt-10 text-sm font-medium">
             {menuItems.map((item) =>
-              item.submenu ? (
-                <div key={item.title}>
-                  <button
-                    onClick={() => toggleMenu(item.title)}
-                    className="flex items-center justify-between w-full text-gray-700 hover:text-sky-700 transition"
-                  >
-                    <div className="flex items-center">
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </div>
-                    {expandedMenus[item.title] ? (
-                      <ChevronDown size={18} />
-                    ) : (
-                      <ChevronRight size={18} />
-                    )}
-                  </button>
-                  <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                      expandedMenus[item.title] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                    }`}
-                  >
-                    <div className="mt-2 flex flex-col space-y-1 text-gray-700">
-                      {item.submenu.map((sub) => (
-                        <Link
-                          key={sub.href}
-                          href={sub.href}
-                          className={`px-6 py-2 rounded-md transition-all text-left hover:bg-sky-100 ${
-                            isActive(sub.href)
-                              ? 'bg-sky-100 text-sky-700 font-semibold'
-                              : ''
-                          }`}
-                        >
-                          {sub.title}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : item.title === 'Logout' ? (
+              item.title === 'Logout' ? (
                 <button
                   key="logout"
                   onClick={handleLogout}
