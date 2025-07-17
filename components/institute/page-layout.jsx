@@ -70,6 +70,11 @@ export default function InstituteLayout({ children }) {
       href: '/institute/dashboard/card-designs',
       icon: <IdCard size={18} className="mr-2" />,
     },
+    {
+      label: 'Upload Card Design',
+      href: '/institute/dashboard/upload-card',
+      icon: <IdCard size={18} className="mr-2" />,
+    },
   ];
 
   return (

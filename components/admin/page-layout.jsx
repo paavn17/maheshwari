@@ -70,6 +70,11 @@ const menuItems = [
     href: '/admin/dashboard/card-designs',
     icon: <Badge size={18} className="mr-2" />,
   },
+    {
+    title: 'Requested Card Designs',
+    href: '/admin/dashboard/requested-card-designs',
+    icon: <Badge size={18} className="mr-2" />,
+  },
   {
     title: 'Change Password',
     href: '/admin/dashboard/change-password',
@@ -98,9 +103,9 @@ export default function DashboardLayout({ children }) {
   };
 
   return (
-    <div className="flex min-h-screen font-sans bg-gray-50">
+    <div className="flex font-sans bg-gray-50">
       {/* Sidebar */}
-      <aside className="sticky top-0 h-screen w-[240px] bg-white shadow-md flex flex-col justify-between">
+      <aside className="sticky top-0  w-[240px] bg-white shadow-md flex flex-col justify-between">
         <div>
           {/* Logo & Title */}
           <div className="flex flex-col items-center ">
@@ -117,7 +122,7 @@ export default function DashboardLayout({ children }) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex flex-col space-y-2 px-4 mt-10 text-sm font-medium">
+          <nav className="flex flex-col space-y-2 px-4 mt-10 text-sm font-medium mb-40">
             {menuItems.map((item) =>
               item.title === 'Logout' ? (
                 <button
@@ -160,7 +165,7 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto max-h-screen p-8 bg-sky-100">
+      <main className="flex-1 overflow-y-auto  p-8 bg-sky-100">
         {children || (
           <div className="text-gray-400 text-lg">Main content goes here...</div>
         )}
