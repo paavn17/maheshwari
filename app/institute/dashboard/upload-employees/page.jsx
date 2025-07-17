@@ -29,9 +29,10 @@ export default function UploadEmployeesPage() {
   const [imageBase64, setImageBase64] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [fileData, setFileData] = useState([]);
+  const [imageMap, setImageMap] = useState({});
   const fileInputRef = useRef(null);
+  const folderInputRef = useRef(null);
 
-  // Handle form input
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -45,13 +46,11 @@ export default function UploadEmployeesPage() {
     reader.onloadend = () => {
       setImageBase64(reader.result);
     };
-    reader.readAsDataURL(file); // converts to base64
+    reader.readAsDataURL(file);
   };
 
-  const isFormValid = () =>
-    requiredFields.every((field) => formData[field]?.trim() !== '');
+  const isFormValid = () => requiredFields.every((field) => formData[field]?.trim() !== '');
 
-  // Single upload submit
   const handleManualSubmit = async () => {
     if (!isFormValid()) {
       setStatusMessage('❌ Please fill all required fields marked with *');
@@ -81,7 +80,6 @@ export default function UploadEmployeesPage() {
     }
   };
 
-  // Handle Excel File Upload
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -102,7 +100,13 @@ export default function UploadEmployeesPage() {
         return;
       }
 
-      setFileData(json);
+      const enriched = json.map((row) => {
+        const matchKey = row.emp_id?.toString();
+        const matchedImage = imageMap[matchKey];
+        return matchedImage ? { ...row, preview: matchedImage } : row;
+      });
+
+      setFileData(enriched);
       setStatusMessage(`📄 Loaded ${json.length} employees from Excel`);
     };
     reader.readAsBinaryString(file);
@@ -116,18 +120,49 @@ export default function UploadEmployeesPage() {
     });
   };
 
+  const handleFolderUpload = (e) => {
+    const files = e.target.files;
+    const newImageMap = {};
+    const pending = [];
+
+    Array.from(files).forEach((file) => {
+      const key = file.name.split('.')[0];
+      const reader = new FileReader();
+
+      pending.push(
+        new Promise((resolve) => {
+          reader.onloadend = () => {
+            newImageMap[key] = reader.result;
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        })
+      );
+    });
+
+    Promise.all(pending).then(() => {
+      setImageMap(newImageMap);
+      setStatusMessage(`🖼️ Loaded ${Object.keys(newImageMap).length} images.`);
+    });
+  };
+
   const handleBulkUpload = async () => {
     if (!fileData.length) {
       setStatusMessage('❌ Please select a valid Excel file.');
       return;
     }
 
-    setStatusMessage('⏳ Uploading employeAes...');
+    setStatusMessage('⏳ Uploading employees...');
     try {
+      const payload = fileData.map((emp) => ({
+        ...emp,
+        profile_pic: imageMap[emp.emp_id?.toString()] || '',
+      }));
+
       const res = await fetch('/api/institute/employees/bulk-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employees: fileData }),
+        body: JSON.stringify({ employees: payload }),
       });
 
       const data = await res.json();
@@ -201,6 +236,14 @@ export default function UploadEmployeesPage() {
               onChange={handleFileChange}
               className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-sky-200 file:text-gray-700 hover:file:bg-sky-300"
             />
+            <input
+              type="file"
+              webkitdirectory="true"
+              multiple
+              ref={folderInputRef}
+              onChange={handleFolderUpload}
+              className="text-sm text-sky-600"
+            />
             <button
               onClick={handleBulkUpload}
               className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
@@ -222,6 +265,7 @@ export default function UploadEmployeesPage() {
                         {field.replace(/_/g, ' ')}
                       </th>
                     ))}
+                    <th className="px-3 py-2 border-b text-left font-medium text-gray-700 min-w-[160px]">Image</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -237,6 +281,17 @@ export default function UploadEmployeesPage() {
                           />
                         </td>
                       ))}
+                      <td className="px-3 py-1 border-b">
+                        {row.preview ? (
+                          <img
+                            src={row.preview}
+                            alt="preview"
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        ) : (
+                          <span className="text-xs text-gray-400">No image</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -245,7 +300,6 @@ export default function UploadEmployeesPage() {
           )}
         </section>
 
-        {/* Status Message */}
         {statusMessage && (
           <p className="text-sm mt-6 font-medium text-sky-700">{statusMessage}</p>
         )}

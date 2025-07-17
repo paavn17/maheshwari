@@ -34,18 +34,25 @@ export async function POST(req) {
       const {
         name = '', father_name = '', emp_id = '', pf_no = '', designation = '', department = '',
         doj = null, dob = null, gender = '', mobile = '', email = '', adhaar_no = '',
-        blood_group = '', identification = '', address = ''
+        blood_group = '', identification = '', address = '', profile_pic = ''
       } = emp;
 
       // Skip if required fields are missing
       if (!name || !emp_id || !mobile) continue;
 
+      // ✅ Convert base64 image to Buffer if exists
+      let profileBuffer = null;
+      if (profile_pic?.startsWith?.('data:image')) {
+        const base64 = profile_pic.split(',')[1];
+        profileBuffer = Buffer.from(base64, 'base64');
+      }
+
       await db.query(
         `INSERT INTO employees (
           admin_id, institution_id, name, father_name, emp_id, pf_no, designation, department,
           doj, dob, gender, mobile, email, adhaar_no, blood_group,
-          identification, address
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          identification, address, profile_pic
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           admin_id,
           institution_id,
@@ -63,7 +70,8 @@ export async function POST(req) {
           adhaar_no,
           blood_group,
           identification,
-          address
+          address,
+          profileBuffer
         ]
       );
     }
