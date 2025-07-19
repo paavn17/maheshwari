@@ -21,9 +21,12 @@ export async function GET(request) {
       `SELECT 
          s.*, 
          i.name AS institution_name, 
-         i.code AS institution_code
+         i.code AS institution_code,
+         ia.name AS admin_name,
+         ia.phone AS admin_phone
        FROM students s
        LEFT JOIN institutions i ON s.institution_id = i.id
+       LEFT JOIN institution_admins ia ON s.admin_id = ia.id
        WHERE s.id = ?`,
       [studentId]
     );
@@ -66,6 +69,8 @@ export async function GET(request) {
       payment_status: student.payment_status,
       institution_name: student.institution_name,
       institution_code: student.institution_code,
+      admin_name: student.admin_name,
+      admin_phone: student.admin_phone,
       profile_pic,
     };
 

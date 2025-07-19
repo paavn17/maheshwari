@@ -1,3 +1,4 @@
+// Navbar Component
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -18,8 +19,8 @@ export default function Navbar() {
 
   return (
     <div className="pt-6 px-4 md:px-8">
-      <nav className="w-full max-w-8xl mx-auto bg-white backdrop-blur-md border border-white/30 rounded-xl px-6 md:px-10 shadow-md">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <nav className="w-full max-w-7xl mx-auto bg-white/90 backdrop-blur-md border border-orange-100 rounded-2xl px-6 md:px-10 shadow-lg">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4">
           {/* Logo */}
           <Image src="/images/logo.png" alt="Logo" width={90} height={50} />
 
@@ -28,14 +29,14 @@ export default function Navbar() {
             {isLoggedIn ? (
               <button
                 onClick={handleLogout}
-                className="w-full sm:w-auto px-6 py-3 text-base sm:text-sm font-semibold text-gray-700 bg-white/80 border border-gray-300 rounded-lg hover:bg-white hover:shadow-md transition duration-200"
+                className="w-full sm:w-auto px-6 py-3 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl transition-colors"
               >
                 Logout
               </button>
             ) : (
               <button
                 onClick={handleLogin}
-                className="w-full sm:w-auto px-6 py-3 text-base sm:text-sm font-semibold text-gray-700 bg-blue-300  border border-gray-300 rounded-lg hover:bg-white hover:shadow-md transition duration-200"
+                className="w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white bg-orange-400 hover:bg-orange-500 rounded-xl shadow-md transition-colors"
               >
                 Login
               </button>

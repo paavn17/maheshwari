@@ -105,32 +105,34 @@ export default function DashboardLayout({ children }) {
   };
 
   return (
-    <div className="flex font-sans bg-gray-50">
+    <div className="flex font-sans ">
       {/* Sidebar */}
-      <aside className="sticky top-0  w-[240px] bg-white shadow-md flex flex-col justify-between">
+      <aside className="sticky top-0 w-[240px] bg-white shadow-lg border-r border-orange-100 flex flex-col justify-between">
         <div>
           {/* Logo & Title */}
-          <div className="flex flex-col items-center ">
-            <Image
-              src="/images/logo.png"
-              alt="ID Card Logo"
-              width={150}
-              height={80}
-              className="object-contain"
-            />
-            <span className=" font-bold text-lg text-gray-800 text-center">
+          <div className="flex flex-col items-center py-6 border-b border-orange-100">
+            <div className=" p-3 rounded-xl mb-3">
+              <Image
+                src="/images/logo.png"
+                alt="ID Card Logo"
+                width={100}
+                height={100}
+                className="object-contain w-40 h-40"
+              />
+            </div>
+            <span className="font-bold text-lg text-gray-800 text-center">
               Maheshwari ID Cards
             </span>
           </div>
 
           {/* Navigation */}
-          <nav className="flex flex-col space-y-2 px-4 mt-10 text-sm font-medium mb-40">
+          <nav className="flex flex-col space-y-2 px-4 mt-6 text-sm font-medium mb-40">
             {menuItems.map((item) =>
               item.title === 'Logout' ? (
                 <button
                   key="logout"
                   onClick={handleLogout}
-                  className="flex items-center justify-between px-4 py-2 rounded-md transition text-red-600 hover:text-red-700"
+                  className="flex items-center justify-between px-4 py-3 rounded-xl transition text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <div className="flex items-center">
                     {item.icon}
@@ -142,15 +144,15 @@ export default function DashboardLayout({ children }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-4 py-2 rounded-md transition ${
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl transition ${
                     item.danger
-                      ? 'text-red-600 hover:text-red-700'
-                      : 'text-gray-600 hover:text-sky-700 hover:bg-gray-100'
+                      ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                      : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50'
                   } ${
                     isActive(item.href)
                       ? item.danger
-                        ? 'text-red-600 font-semibold'
-                        : 'bg-sky-100 text-sky-700 font-semibold'
+                        ? 'text-red-600 font-semibold bg-red-50'
+                        : 'bg-orange-100 text-orange-700 font-semibold shadow-sm'
                       : ''
                   }`}
                 >
@@ -167,7 +169,7 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto  p-8 bg-sky-100">
+      <main className="flex-1 overflow-y-auto p-8">
         {children || (
           <div className="text-gray-400 text-lg">Main content goes here...</div>
         )}

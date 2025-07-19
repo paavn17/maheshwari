@@ -3,7 +3,7 @@ import HeroSection from "@/components/landing-page";
 
 export default function Home() {
   return (
-    <div className="bg-cyan-200">
+    <div>
     <HeroSection/>
     <Footer/>
     </div>
