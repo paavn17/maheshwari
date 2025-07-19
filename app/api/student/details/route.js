@@ -40,6 +40,14 @@ export async function GET(request) {
       profile_pic = `data:image/jpeg;base64,${buffer.toString('base64')}`;
     }
 
+    // Safe date conversion for dob
+    let dob = null;
+    if (student.dob && !isNaN(new Date(student.dob))) {
+      dob = new Date(student.dob).toISOString();
+    } else if (student.dob) {
+      console.warn('Invalid DOB format:', student.dob);
+    }
+
     const studentData = {
       name: student.name,
       father_name: student.father_name,
@@ -47,7 +55,7 @@ export async function GET(request) {
       mobile: student.mobile,
       email: student.email,
       gender: student.gender,
-      dob: student.dob,
+      dob: dob,
       blood_group: student.blood_group,
       adhaar_no: student.adhaar_no,
       identification: student.identification,

@@ -9,16 +9,18 @@ import {
   UserCog,
   Upload,
   Users,
-  ImageIcon,
   Layers,
-  PlusCircle,
+  UserPlus,
+  ImageIcon,
   FileText,
+  CreditCard,
+  Download,
   FileDown,
-  Badge,       // ✅ Replace IdBadge with Badge
   Lock,
   LogOut,
 } from 'lucide-react';
 
+// Optimized menu items with unique icons and clear priority
 const menuItems = [
   {
     title: 'Dashboard',
@@ -29,6 +31,11 @@ const menuItems = [
     title: 'Admin Details',
     href: '/admin/dashboard/admin-details',
     icon: <UserCog size={18} className="mr-2" />,
+  },
+  {
+    title: 'Add Admins',
+    href: '/admin/dashboard/add-admins',
+    icon: <UserPlus size={18} className="mr-2" />,
   },
   {
     title: 'Upload Students Data',
@@ -46,34 +53,29 @@ const menuItems = [
     icon: <Layers size={18} className="mr-2" />,
   },
   {
-    title: 'Add Admins',
-    href: '/admin/dashboard/add-admins',
-    icon: <PlusCircle size={18} className="mr-2" />,
+    title: 'Card Designs',
+    href: '/admin/dashboard/card-designs',
+    icon: <ImageIcon size={18} className="mr-2" />,
+  },
+  {
+    title: 'Requested Card Designs',
+    href: '/admin/dashboard/requested-card-designs',
+    icon: <FileText size={18} className="mr-2" />,
   },
   {
     title: 'Payment Details',
     href: '/admin/dashboard/payment-details',
-    icon: <FileText size={18} className="mr-2" />,
+    icon: <CreditCard size={18} className="mr-2" />,
   },
   {
     title: 'Download Employees Data',
     href: '/admin/dashboard/download-employee-data',
-    icon: <FileDown size={18} className="mr-2" />,
+    icon: <Download size={18} className="mr-2" />,
   },
   {
     title: 'Download Students Data',
     href: '/admin/dashboard/download-data',
     icon: <FileDown size={18} className="mr-2" />,
-  },
-  {
-    title: 'Card Designs',
-    href: '/admin/dashboard/card-designs',
-    icon: <Badge size={18} className="mr-2" />,
-  },
-    {
-    title: 'Requested Card Designs',
-    href: '/admin/dashboard/requested-card-designs',
-    icon: <Badge size={18} className="mr-2" />,
   },
   {
     title: 'Change Password',

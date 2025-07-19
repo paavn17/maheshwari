@@ -26,6 +26,18 @@ export default function Page() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check file size (4MB = 4 * 1024 * 1024 bytes)
+    const maxSizeInBytes = 4 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      setStatus('❌ Logo file size must be less than 4MB. Please choose a smaller image.');
+      // Clear the file input
+      e.target.value = '';
+      return;
+    }
+
+    // Clear any previous error messages
+    setStatus('');
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setProfile((prev) => ({ ...prev, logo: reader.result }));
@@ -65,9 +77,16 @@ export default function Page() {
 
         {/* Logo Upload */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Logo <span className="text-gray-500">(Max: 4MB)</span>
+          </label>
           {editMode ? (
-            <input type="file" accept="image/*" onChange={handleLogoChange} />
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleLogoChange}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+            />
           ) : null}
           {profile.logo && (
             <div className="mt-2">

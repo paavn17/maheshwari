@@ -26,11 +26,12 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'No students provided' }), { status: 400 });
     }
 
-    const requiredFields = ['name', 'roll_no', 'mobile']; // ✅ student_type and admin_id removed
+    const requiredFields = ['name', 'roll_no', 'mobile'];
 
     for (let i = 0; i < students.length; i++) {
       const student = students[i];
 
+      // ✅ Validate required fields
       for (const field of requiredFields) {
         if (!student[field] || student[field].toString().trim() === '') {
           return new Response(
@@ -40,12 +41,24 @@ export async function POST(req) {
         }
       }
 
-      // ✅ Only institution_id is attached
+      // ✅ Attach institution ID
       student.institution_id = institution_id;
 
+      // ✅ Convert batch to start_year and end_year
+      if (student.batch && typeof student.batch === 'string') {
+        const [start, end] = student.batch.split('-').map((s) => s.trim());
+        student.start_year = start;
+        student.end_year = end;
+        delete student.batch; // ❗ remove to prevent insert error
+      }
+
+      // ✅ Clean null/undefined values
       const cleanStudent = Object.fromEntries(
         Object.entries(student).filter(([_, v]) => v !== null && v !== undefined)
       );
+
+      // ✅ Ensure batch is not present
+      delete cleanStudent.batch;
 
       await db.query('INSERT INTO students SET ?', [cleanStudent]);
     }

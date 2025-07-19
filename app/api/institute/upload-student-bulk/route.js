@@ -41,6 +41,7 @@ export async function POST(req) {
     for (let i = 0; i < students.length; i++) {
       const student = students[i];
 
+      // ✅ Check required fields
       for (const field of requiredFields) {
         if (!student[field] || student[field].toString().trim() === '') {
           return new Response(
@@ -50,14 +51,24 @@ export async function POST(req) {
         }
       }
 
-      // ✅ Attach both IDs
+      // ✅ Attach institution/admin ID
       student.institution_id = institutionId;
       student.admin_id = adminId;
 
+      // ✅ Split batch into start_year and end_year
+      if (student.batch && typeof student.batch === 'string') {
+        const [start, end] = student.batch.split('-').map((s) => s.trim());
+        student.start_year = start;
+        student.end_year = end;
+        delete student.batch;
+      }
+
+      // ✅ Clean undefined/null values
       const cleanStudent = Object.fromEntries(
         Object.entries(student).filter(([_, v]) => v !== null && v !== undefined)
       );
 
+      // ✅ Insert into database
       await db.query('INSERT INTO students SET ?', [cleanStudent]);
     }
 
