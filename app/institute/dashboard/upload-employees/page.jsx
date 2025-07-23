@@ -24,7 +24,6 @@ export default function UploadEmployeesPage() {
   };
 
   const requiredFields = ['name', 'emp_id', 'mobile'];
-
   const [formData, setFormData] = useState(initialForm);
   const [imageBase64, setImageBase64] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
@@ -41,11 +40,8 @@ export default function UploadEmployeesPage() {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageBase64(reader.result);
-    };
+    reader.onloadend = () => setImageBase64(reader.result);
     reader.readAsDataURL(file);
   };
 
@@ -63,6 +59,7 @@ export default function UploadEmployeesPage() {
     };
 
     setStatusMessage('⏳ Adding employee...');
+
     try {
       const res = await fetch('/api/institute/employees/add-single', {
         method: 'POST',
@@ -128,7 +125,6 @@ export default function UploadEmployeesPage() {
     Array.from(files).forEach((file) => {
       const key = file.name.split('.')[0];
       const reader = new FileReader();
-
       pending.push(
         new Promise((resolve) => {
           reader.onloadend = () => {
@@ -177,16 +173,16 @@ export default function UploadEmployeesPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-sky-800 mb-6">📥 Upload Employee Data</h1>
+      <div className="p-6  min-h-screen">
+        <h1 className="text-3xl font-bold text-orange-700 mb-6"> Upload Employee Data</h1>
 
         {/* Single Upload */}
-        <section>
-          <h2 className="text-xl font-semibold text-sky-700 mb-4">🔹 Add Single Employee</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-6xl">
+        <section className="mb-12">
+          <h2 className="text-xl font-semibold text-orange-600 mb-4"> Add Single Employee</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 max-w-6xl">
             {Object.entries(formData).map(([key, value]) => (
               <div key={key}>
-                <label className="block text-sm text-gray-700 mb-1 capitalize">
+                <label className="block text-sm font-medium text-orange-800 mb-1 capitalize">
                   {key.replace(/_/g, ' ')} {requiredFields.includes(key) ? '*' : ''}
                 </label>
                 <input
@@ -194,24 +190,24 @@ export default function UploadEmployeesPage() {
                   name={key}
                   value={value}
                   onChange={handleInputChange}
-                  className="p-2 border border-gray-300 rounded w-full"
+                  className="p-2 border border-orange-300 rounded w-full text-sm focus:ring-2 focus:ring-orange-400"
                 />
               </div>
             ))}
 
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Profile Picture</label>
+              <label className="block text-sm font-medium text-orange-800 mb-1">Profile Picture</label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="p-2 border border-gray-300 rounded w-full"
+                className="text-sm"
               />
               {imageBase64 && (
                 <img
                   src={imageBase64}
                   alt="Preview"
-                  className="mt-2 w-32 h-32 object-cover border rounded"
+                  className="mt-2 w-28 h-28 object-cover border border-orange-300 rounded shadow"
                 />
               )}
             </div>
@@ -219,22 +215,22 @@ export default function UploadEmployeesPage() {
 
           <button
             onClick={handleManualSubmit}
-            className="mt-4 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded shadow"
+            className="mt-5 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded shadow font-semibold"
           >
             ➕ Add Employee
           </button>
         </section>
 
         {/* Bulk Upload */}
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold text-sky-700 mb-4">📑 Bulk Upload via Excel</h2>
+        <section>
+          <h2 className="text-xl font-semibold text-orange-600 mb-4"> Upload via Excel</h2>
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
             <input
               type="file"
               accept=".xlsx, .xls"
               ref={fileInputRef}
               onChange={handleFileChange}
-              className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-sky-200 file:text-gray-700 hover:file:bg-sky-300"
+              className="text-sm text-orange-800"
             />
             <input
               type="file"
@@ -242,51 +238,57 @@ export default function UploadEmployeesPage() {
               multiple
               ref={folderInputRef}
               onChange={handleFolderUpload}
-              className="text-sm text-sky-600"
+              className="text-sm text-orange-600"
             />
             <button
               onClick={handleBulkUpload}
-              className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded shadow transition font-medium"
             >
-              ⬆️ Upload File
+              Upload File
             </button>
           </div>
 
           {fileData.length > 0 && (
-            <div className="overflow-auto max-h-[500px] border border-gray-300 rounded shadow">
-              <table className="min-w-full text-sm table-fixed">
-                <thead className="bg-gray-100 sticky top-0 z-10">
+            <div className="overflow-auto max-h-[500px] border border-orange-300 rounded-lg shadow">
+              <table className="min-w-full text-sm table-fixed border-collapse">
+                <thead className="bg-orange-100 sticky top-0 z-10 text-orange-800">
                   <tr>
-                    {Object.keys(fileData[0]).map((field) => (
-                      <th
-                        key={field}
-                        className="px-3 py-2 border-b text-left font-medium text-gray-700 min-w-[160px] truncate"
-                      >
-                        {field.replace(/_/g, ' ')}
-                      </th>
-                    ))}
-                    <th className="px-3 py-2 border-b text-left font-medium text-gray-700 min-w-[160px]">Image</th>
+                    {Object.keys(fileData[0])
+                      .filter((key) => key !== 'preview')
+                      .map((field) => (
+                        <th
+                          key={field}
+                          className="px-3 py-2 border-b border-orange-300 text-left font-semibold min-w-[140px]"
+                        >
+                          {field.replace(/_/g, ' ')}
+                        </th>
+                      ))}
+                    <th className="px-3 py-2 border-b border-orange-300 text-left font-semibold min-w-[140px]">
+                      Image
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {fileData.map((row, index) => (
-                    <tr key={index} className="even:bg-white odd:bg-gray-50">
-                      {Object.entries(row).map(([field, value]) => (
-                        <td key={field} className="px-3 py-1 border-b align-top min-w-[160px]">
-                          <input
-                            type="text"
-                            value={value}
-                            onChange={(e) => handleCellChange(index, field, e.target.value)}
-                            className="w-full p-1 border border-gray-300 rounded bg-white text-sm"
-                          />
-                        </td>
-                      ))}
-                      <td className="px-3 py-1 border-b">
+                    <tr key={index} className="even:bg-orange-50 odd:bg-white">
+                      {Object.entries(row)
+                        .filter(([key]) => key !== 'preview')
+                        .map(([field, value]) => (
+                          <td key={field} className="px-3 py-2 border-b border-orange-200">
+                            <input
+                              type="text"
+                              value={value}
+                              onChange={(e) => handleCellChange(index, field, e.target.value)}
+                              className="w-full p-1 border border-orange-300 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-orange-400"
+                            />
+                          </td>
+                        ))}
+                      <td className="px-3 py-2 border-b border-orange-200 text-center">
                         {row.preview ? (
                           <img
                             src={row.preview}
                             alt="preview"
-                            className="w-12 h-12 object-cover rounded"
+                            className="w-12 h-12 object-cover rounded border shadow"
                           />
                         ) : (
                           <span className="text-xs text-gray-400">No image</span>
@@ -298,11 +300,11 @@ export default function UploadEmployeesPage() {
               </table>
             </div>
           )}
-        </section>
 
-        {statusMessage && (
-          <p className="text-sm mt-6 font-medium text-sky-700">{statusMessage}</p>
-        )}
+          {statusMessage && (
+            <p className="text-sm mt-6 font-medium text-orange-700">{statusMessage}</p>
+          )}
+        </section>
       </div>
     </DashboardLayout>
   );

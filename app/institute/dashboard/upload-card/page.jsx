@@ -12,23 +12,20 @@ export default function InstituteCardUploader() {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
   const [frontBlob, setFrontBlob] = useState(null);
   const [backBlob, setBackBlob] = useState(null);
-
   const [designName, setDesignName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(URL.createObjectURL(file));
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
-      setCroppedAreaPixels(null);
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImage(URL.createObjectURL(file));
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
   };
 
   const onCrop = useCallback((_, areaPixels) => {
@@ -44,13 +41,13 @@ export default function InstituteCardUploader() {
         setFrontImage(previewUrl);
         setFrontBlob(blob);
         setStep('back');
-        setImage(null);
       } else {
         setBackImage(previewUrl);
         setBackBlob(blob);
         setStep('done');
-        setImage(null);
       }
+
+      setImage(null);
     } catch (err) {
       console.error('Cropping failed:', err);
       alert('Cropping failed. Check console.');
@@ -116,94 +113,106 @@ export default function InstituteCardUploader() {
 
   return (
     <InstituteLayout>
-    <div className="max-w-xl mx-auto p-6 bg-white rounded shadow space-y-6">
-      {step !== 'done' && !image && (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Upload {step === 'front' ? 'Front' : 'Back'} Side of ID Card:
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={onFileChange}
-            className="file:mr-4 file:py-2 file:px-4
-                       file:rounded file:border-0
-                       file:text-sm file:font-semibold
-                       file:bg-sky-200 file:text-gray-700
-                       hover:file:bg-sky-300 max-w-xs hover:cursor-pointer"
-          />
-        </div>
-      )}
-
-      {image && (
-        <>
-          <div className="relative w-full h-[300px] bg-gray-100 rounded overflow-hidden shadow">
-            <Cropper
-              image={image}
-              crop={crop}
-              zoom={zoom}
-              aspect={2 / 3}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={onCrop}
-              cropShape="rect"
-              showGrid
+      <div className="max-w-xl mx-auto p-6 bg-orange-50 rounded shadow space-y-6">
+        {step !== 'done' && !image && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-orange-800">
+              Upload {step === 'front' ? 'Front' : 'Back'} Side of ID Card:
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onFileChange}
+              className="file:mr-4 file:py-2 file:px-4
+                         file:rounded file:border-0
+                         file:text-sm file:font-semibold
+                         file:bg-orange-100 file:text-orange-800
+                         hover:file:bg-orange-200 max-w-xs hover:cursor-pointer"
             />
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Zoom</label>
-            <Slider value={zoom} min={0.5} max={3} step={0.1} onChange={(e, z) => setZoom(z)} />
-          </div>
-
-          <div className="flex gap-4">
-            <button
-              onClick={handleCropAndContinue}
-              className="flex-1 bg-sky-500 text-white py-2 rounded hover:bg-sky-700"
-            >
-              {step === 'front' ? 'Crop Front' : 'Crop Back'}
-            </button>
-            <button
-              onClick={handleReset}
-              className="flex-1 bg-gray-300 text-gray-800 py-2 rounded hover:bg-gray-400"
-            >
-              Reset
-            </button>
-          </div>
-        </>
-      )}
-
-      {step === 'done' && (
-        <div className="space-y-4">
-          <div className="flex gap-4">
-            <div>
-              <p className="text-sm font-medium">Front</p>
-              <img src={frontImage} className="w-[200px] h-[300px] object-cover border rounded" />
+        {/* Cropper */}
+        {image && (
+          <>
+            <div className="relative w-full h-[300px] bg-gray-100 rounded overflow-hidden shadow">
+              <Cropper
+                image={image}
+                crop={crop}
+                zoom={zoom}
+                aspect={2 / 3}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCrop}
+                cropShape="rect"
+                showGrid
+              />
             </div>
+
             <div>
-              <p className="text-sm font-medium">Back</p>
-              <img src={backImage} className="w-[200px] h-[300px] object-cover border rounded" />
+              <label className="block text-sm font-medium text-orange-800">Zoom</label>
+              <Slider value={zoom} min={0.5} max={3} step={0.1} onChange={(e, z) => setZoom(z)} />
             </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={handleCropAndContinue}
+                className="flex-1 bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition font-medium"
+              >
+                {step === 'front' ? 'Crop Front' : 'Crop Back'}
+              </button>
+              <button
+                onClick={handleReset}
+                className="flex-1 bg-gray-300 text-gray-800 py-2 rounded hover:bg-gray-400 transition"
+              >
+                Reset
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Final Preview */}
+        {step === 'done' && (
+          <div className="space-y-4">
+            <div className="flex gap-4 justify-center">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-orange-700">Front</p>
+                <img
+                  src={frontImage}
+                  className="w-[200px] h-[300px] object-cover border border-orange-300 rounded shadow"
+                  alt="Front Preview"
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-orange-700">Back</p>
+                <img
+                  src={backImage}
+                  className="w-[200px] h-[300px] object-cover border border-orange-300 rounded shadow"
+                  alt="Back Preview"
+                />
+              </div>
+            </div>
+
+            {/* Design Name Input */}
+            <input
+              type="text"
+              value={designName}
+              onChange={(e) => setDesignName(e.target.value)}
+              placeholder="Name this design"
+              className="w-full border border-orange-300 px-3 py-2 rounded focus:ring-2 focus:ring-orange-400 text-sm"
+            />
+
+            {/* Upload Button */}
+            <button
+              onClick={handleSubmitDesign}
+              disabled={isSubmitting}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Uploading...' : 'Upload Design'}
+            </button>
           </div>
-
-          <input
-            type="text"
-            value={designName}
-            onChange={(e) => setDesignName(e.target.value)}
-            placeholder="Design Name"
-            className="w-full border px-3 py-2 rounded"
-          />
-
-          <button
-            onClick={handleSubmitDesign}
-            disabled={isSubmitting}
-            className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-800 disabled:opacity-50"
-          >
-            {isSubmitting ? 'Uploading...' : 'Upload Design'}
-          </button>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </InstituteLayout>
   );
 }

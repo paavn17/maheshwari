@@ -26,12 +26,19 @@ export default function SuperAdminDashboardPage() {
   if (!data) {
     return (
       <DashboardLayout>
-        <div className="p-6">{error || 'Loading stats...'}</div>
+        <div className="p-6 text-orange-600">{error || 'Loading stats...'}</div>
       </DashboardLayout>
     );
   }
 
-  const { totalInstitutions, totalStudents, totalWithNoImage, totalByYear, totalByBranch, students } = data;
+  const {
+    totalInstitutions,
+    totalStudents,
+    totalWithNoImage,
+    totalByYear,
+    totalByBranch,
+    students,
+  } = data;
 
   const studentTypeCounts = students.reduce((acc, student) => {
     const type = student.student_type || 'Unknown';
@@ -47,23 +54,21 @@ export default function SuperAdminDashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold text-sky-800">Super Admin Dashboard</h1>
+      <div className="p-6 space-y-8  min-h-screen">
+        <h1 className="text-3xl font-bold text-orange-700">Super Admin Dashboard</h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card label="Total Institutions" value={totalInstitutions} color="bg-sky-600" />
-          <Card label="Total Students" value={totalStudents} color="bg-sky-500" />
-          <Card label="Students Without Image" value={totalWithNoImage} color="bg-rose-500" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <Card label="Total Institutions" value={totalInstitutions} color="bg-orange-500" />
+          <Card label="Total Students" value={totalStudents} color="bg-orange-400" />
+          <Card label="Students Without Image" value={totalWithNoImage} color="bg-red-400" />
         </div>
 
-        {/* Year-wise breakdown */}
-        <Section title="📊 Year-wise Distribution" data={totalByYear} />
-        {/* Branch-wise breakdown */}
-        <Section title="🛠️ Branch-wise Distribution" data={totalByBranch} />
-        {/* Student Type */}
-        <Section title="🎓 Student Type Breakdown" data={studentTypeCounts} />
-        {/* Gender */}
-        <Section title="🧑‍🤝‍🧑 Gender Distribution" data={genderCounts} />
+        {/* Breakdown Lists */}
+        <Section title="Year-wise Distribution" data={totalByYear} />
+        <Section title="Branch-wise Distribution" data={totalByBranch} />
+        <Section title="Student Type Breakdown" data={studentTypeCounts} />
+        <Section title="Gender Distribution" data={genderCounts} />
       </div>
     </DashboardLayout>
   );
@@ -71,9 +76,9 @@ export default function SuperAdminDashboardPage() {
 
 function Card({ label, value, color }) {
   return (
-    <div className={`p-4 rounded shadow text-white ${color}`}>
-      <div className="text-sm uppercase tracking-wide">{label}</div>
-      <div className="text-2xl font-bold mt-1">{value}</div>
+    <div className={`p-4 rounded-lg shadow-sm text-white ${color}`}>
+      <div className="text-xs uppercase font-medium tracking-wide">{label}</div>
+      <div className="text-3xl font-extrabold mt-1">{value}</div>
     </div>
   );
 }
@@ -81,11 +86,11 @@ function Card({ label, value, color }) {
 function Section({ title, data }) {
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-2 text-sky-700">{title}</h3>
-      <ul className="list-disc ml-6 text-sm text-gray-700">
+      <h3 className="text-lg font-semibold mb-2 text-orange-700">{title}</h3>
+      <ul className="list-disc ml-6 text-sm text-gray-800 space-y-1">
         {Object.entries(data).map(([key, value]) => (
           <li key={key}>
-            {key}: {value}
+            {key}: <span className="font-semibold">{value}</span>
           </li>
         ))}
       </ul>

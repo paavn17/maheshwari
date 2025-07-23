@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '@/components/admin/page-layout';
-import { Pencil, Check, X, Power } from 'lucide-react';
+import { Pencil, Check, X, Trash2 } from 'lucide-react';
 
 const Page = () => {
   const [admins, setAdmins] = useState([]);
@@ -16,7 +16,6 @@ const Page = () => {
       try {
         const res = await fetch('/api/superadmin/admins');
         const data = await res.json();
-        console.log
         if (res.ok) setAdmins(data.admins);
         else setError(data.error || 'Failed to fetch admins');
       } catch (err) {
@@ -62,6 +61,26 @@ const Page = () => {
     setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleDelete = async (id) => {
+    const confirmed = confirm('Are you sure you want to delete this admin?');
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/superadmin/admins/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+
+      setAdmins((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert('❌ Failed to delete admin');
+    }
+  };
+
   const groupedAdmins = useMemo(() => {
     const groups = {};
     admins.forEach((admin) => {
@@ -92,12 +111,12 @@ const Page = () => {
 
       {Object.entries(groupedAdmins).map(([code, adminsList]) => (
         <div key={code} className="mb-10">
-          <h2 className="text-xl font-semibold text-sky-800 mb-2">
+          <h2 className="text-xl font-semibold text-orange-700 mb-2">
             College Code: {code}
           </h2>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-              <thead className="bg-sky-200 text-gray-700 text-left text-sm">
+              <thead className="bg-orange-200 text-gray-700 text-left text-sm">
                 <tr>
                   <th className="px-6 py-3">Logo</th>
                   <th className="px-6 py-3">#</th>
@@ -117,7 +136,9 @@ const Page = () => {
                   return (
                     <tr
                       key={admin.id}
-                      className={`border-t ${isActive ? 'bg-white' : 'bg-gray-100 text-gray-400'}`}
+                      className={`border-t ${
+                        isActive ? 'bg-white' : 'bg-gray-100 text-gray-400'
+                      }`}
                     >
                       <td className="px-6 py-3">
                         {admin.institution_logo ? (
@@ -157,18 +178,17 @@ const Page = () => {
                         )}
                       </td>
                       <td className="px-6 py-3">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editData.password}
-                          onChange={(e) => handleChange('password', e.target.value)}
-                          className="border rounded px-2 py-1 text-sm w-full"
-                        />
-                      ) : (
-                        <span className="font-mono text-gray-700">{admin.password}</span>
-                      )}
-                    </td>
-
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editData.password}
+                            onChange={(e) => handleChange('password', e.target.value)}
+                            className="border rounded px-2 py-1 text-sm w-full"
+                          />
+                        ) : (
+                          <span className="font-mono text-gray-700">{admin.password}</span>
+                        )}
+                      </td>
                       <td className="px-6 py-3">
                         {isEditing ? (
                           <input
@@ -209,14 +229,22 @@ const Page = () => {
                               </button>
                             </>
                           ) : (
-                            isActive && (
+                            <>
+                              {isActive && (
+                                <button
+                                  onClick={() => handleEdit(admin)}
+                                  className="text-orange-600 hover:text-orange-800 p-1"
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                              )}
                               <button
-                                onClick={() => handleEdit(admin)}
-                                className="text-sky-600 hover:text-sky-800 p-1"
+                                onClick={() => handleDelete(admin.id)}
+                                className="text-red-600 hover:text-red-800 p-1"
                               >
-                                <Pencil size={16} />
+                                <Trash2 size={16} />
                               </button>
-                            )
+                            </>
                           )}
                         </div>
                       </td>

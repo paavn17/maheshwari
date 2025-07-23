@@ -75,11 +75,11 @@ export default function UpdateStudentsPage() {
         body: JSON.stringify({ students }),
       });
       const data = await res.json();
-      if (res.ok) setStatus('✅ Changes saved successfully.');
-      else setStatus(`❌ ${data.error}`);
+      if (res.ok) setStatus('Changes saved successfully.');
+      else setStatus(`Error: ${data.error}`);
     } catch (err) {
       console.error(err);
-      setStatus('❌ Failed to save changes.');
+      setStatus('Failed to save changes.');
     }
   };
 
@@ -97,23 +97,21 @@ export default function UpdateStudentsPage() {
     if (!students.length) return;
 
     const data = students.map(({ id, institution_id, password, student_type, admin_id, profile_pic, ...rest }) => rest);
-
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Students');
-
     XLSX.writeFile(workbook, 'students.xlsx');
   };
 
   return (
     <InstituteLayout>
-      <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-semibold text-sky-800">Update Student Records</h1>
+      <div className="p-6 space-y-6  min-h-screen">
+        <h1 className="text-3xl font-bold text-orange-700">Update Student Records</h1>
 
         {/* Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <select
-            className="p-2 border rounded"
+            className="p-2 border border-orange-300 rounded text-sm"
             onChange={handleBatchSelect}
             defaultValue=""
           >
@@ -127,7 +125,7 @@ export default function UpdateStudentsPage() {
 
           <input
             type="text"
-            className="p-2 border rounded"
+            className="p-2 border border-orange-300 rounded text-sm"
             placeholder="Branch"
             value={filters.branch}
             onChange={(e) => setFilters({ ...filters, branch: e.target.value })}
@@ -135,60 +133,64 @@ export default function UpdateStudentsPage() {
 
           <input
             type="text"
-            className="p-2 border rounded"
+            className="p-2 border border-orange-300 rounded text-sm"
             placeholder="Student Name"
             value={filters.name}
             onChange={(e) => setFilters({ ...filters, name: e.target.value })}
           />
         </div>
 
+        {/* Buttons */}
         <div className="flex justify-end gap-4">
           <button
             onClick={() => setEditMode(!editMode)}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
           >
-            {editMode ? '🔒 Disable Edit' : '✏️ Enable Edit'}
+            {editMode ? 'Disable Edit' : 'Enable Edit'}
           </button>
 
           <button
             onClick={handleDownloadExcel}
-            className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
           >
-            ⬇️ Download Excel
+            Download Excel
           </button>
         </div>
 
         {/* Table */}
         {loading ? (
-          <p className="text-gray-600">Loading students...</p>
+          <p className="text-orange-600">Loading students...</p>
         ) : students.length === 0 ? (
-          <p className="text-gray-500">No students found. Please select a batch.</p>
+          <p className="text-orange-600">No students found. Please select a batch or try a different filter.</p>
         ) : (
-          <div className="overflow-auto border rounded shadow">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-100">
+          <div className="overflow-auto border border-orange-300 rounded shadow-sm">
+            <table className="min-w-full text-sm border-collapse">
+              <thead className="bg-orange-100 text-orange-900 sticky top-0 z-10">
                 <tr>
-                  {students[0] && Object.keys(students[0])
-                    .filter((field) => !['id', 'institution_id', 'password', 'student_type', 'admin_id'].includes(field))
-                    .map((field) => (
-                      <th key={field} className="px-3 py-2 border-b text-left whitespace-nowrap">{field}</th>
-                    ))}
+                  {students[0] &&
+                    Object.keys(students[0])
+                      .filter((field) => !['id', 'institution_id', 'password', 'student_type', 'admin_id'].includes(field))
+                      .map((field) => (
+                        <th key={field} className="px-3 py-2 border-b border-orange-300 text-left">
+                          {field.replace(/_/g, ' ')}
+                        </th>
+                      ))}
                 </tr>
               </thead>
               <tbody>
                 {students.map((student, i) => (
-                  <tr key={i} className="odd:bg-white even:bg-gray-50">
+                  <tr key={i} className="even:bg-orange-50 odd:bg-white">
                     {Object.entries(student)
                       .filter(([key]) => !['id', 'institution_id', 'password', 'student_type', 'admin_id'].includes(key))
                       .map(([key, val]) => (
-                        <td key={key} className="px-3 py-2 border-b min-w-[140px]">
+                        <td key={key} className="px-3 py-2 border-b border-orange-200 min-w-[140px]">
                           {key === 'profile_pic' ? (
                             <div className="space-y-1">
-                              {val && typeof val === 'string' && val.startsWith('data:image') && (
+                              {val?.startsWith?.('data:image') && (
                                 <img
                                   src={val}
                                   alt="Profile"
-                                  className="h-12 w-12 object-cover rounded-full border"
+                                  className="h-10 w-10 object-cover rounded-full border"
                                 />
                               )}
                               {editMode && (
@@ -205,14 +207,14 @@ export default function UpdateStudentsPage() {
                                 type="date"
                                 value={val || ''}
                                 onChange={(e) => handleFieldChange(i, key, e.target.value)}
-                                className="w-full bg-transparent outline-none"
+                                className="w-full bg-white border border-orange-300 rounded px-1 py-1 text-sm"
                               />
                             ) : (
                               <input
                                 type="text"
                                 value={val || ''}
                                 onChange={(e) => handleFieldChange(i, key, e.target.value)}
-                                className="w-full bg-transparent outline-none"
+                                className="w-full bg-white border border-orange-300 rounded px-1 py-1 text-sm"
                               />
                             )
                           ) : (
@@ -227,15 +229,18 @@ export default function UpdateStudentsPage() {
           </div>
         )}
 
+        {/* Save Button */}
         {editMode && students.length > 0 && (
           <button
             onClick={handleSaveAll}
-            className="mt-4 bg-sky-600 text-white px-6 py-2 rounded hover:bg-sky-700"
+            className="mt-4 bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600"
           >
-            💾 Save Changes
+            Save Changes
           </button>
         )}
-        {status && <p className="text-sm text-sky-700 mt-2">{status}</p>}
+        {status && (
+          <p className="text-sm mt-4 text-orange-700 font-medium">{status}</p>
+        )}
       </div>
     </InstituteLayout>
   );

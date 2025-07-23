@@ -10,12 +10,12 @@ export default function AddInstitutionAdminPage() {
 
   useEffect(() => {
     fetch('/api/superadmin/institutions/all')
-      .then(res => res.json())
-      .then(data => setInstitutions(data));
+      .then((res) => res.json())
+      .then((data) => setInstitutions(data));
   }, []);
 
   const handleChange = (e) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async () => {
@@ -23,9 +23,9 @@ export default function AddInstitutionAdminPage() {
       const res = await fetch('/api/superadmin/institution-admins/add-existing', {
         method: 'POST',
         body: JSON.stringify(form),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
-      alert(res.ok ? 'Admin Added' : 'Error');
+      alert(res.ok ? '✅ Admin Added' : '❌ Error');
     } else {
       const payload = {
         college_name: form.name,
@@ -33,16 +33,16 @@ export default function AddInstitutionAdminPage() {
         admin_name: form.admin_name,
         admin_email: form.admin_email,
         admin_phone: form.admin_phone,
-        admin_password: form.admin_password
+        admin_password: form.admin_password,
       };
 
       const res = await fetch('/api/superadmin/institutions/add-with-admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
-      alert(res.ok ? 'Institution & Admin Added' : 'Error');
+      alert(res.ok ? '✅ Institution & Admin Added' : '❌ Error');
     }
   };
 
@@ -50,7 +50,7 @@ export default function AddInstitutionAdminPage() {
     <DashboardLayout>
       <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl w-full bg-white rounded-2xl p-8 shadow-md space-y-6">
-          <h2 className="text-2xl font-bold text-blue-800 mb-2">Add Institution / Admin</h2>
+          <h2 className="text-2xl font-bold text-orange-700 mb-2">Add Institution / Admin</h2>
 
           {/* Mode Selection */}
           <div className="flex gap-6">
@@ -61,9 +61,11 @@ export default function AddInstitutionAdminPage() {
                 value="existing"
                 checked={mode === 'existing'}
                 onChange={() => setMode('existing')}
-                className="text-blue-600 focus:ring-blue-400"
+                className="text-orange-600 focus:ring-orange-400"
               />
-              <span className="text-sm font-medium text-gray-700">Add Admin to Existing Institution</span>
+              <span className="text-sm font-medium text-gray-700">
+                Add Admin to Existing Institution
+              </span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -72,9 +74,11 @@ export default function AddInstitutionAdminPage() {
                 value="new"
                 checked={mode === 'new'}
                 onChange={() => setMode('new')}
-                className="text-blue-600 focus:ring-blue-400"
+                className="text-orange-600 focus:ring-orange-400"
               />
-              <span className="text-sm font-medium text-gray-700">Add New Institution & Admin</span>
+              <span className="text-sm font-medium text-gray-700">
+                Add New Institution & Ad.min
+              </span>
             </label>
           </div>
 
@@ -83,15 +87,19 @@ export default function AddInstitutionAdminPage() {
             {mode === 'existing' ? (
               <>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Select Institution</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    Select Institution
+                  </label>
                   <select
                     name="institution_id"
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                   >
                     <option value="">-- Select Institution --</option>
-                    {institutions.map(inst => (
-                      <option key={inst.id} value={inst.id}>{inst.name}</option>
+                    {institutions.map((inst) => (
+                      <option key={inst.id} value={inst.id}>
+                        {inst.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -99,26 +107,26 @@ export default function AddInstitutionAdminPage() {
                   name="name"
                   placeholder="Admin Name"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <input
                   name="email"
                   placeholder="Admin Email"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <input
                   name="phone"
                   placeholder="Admin Phone"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <input
                   name="password"
                   placeholder="Admin Password"
                   type="password"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
               </>
             ) : (
@@ -127,38 +135,38 @@ export default function AddInstitutionAdminPage() {
                   name="name"
                   placeholder="Institution Name"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <input
                   name="code"
                   placeholder="Institution Code"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <input
                   name="admin_name"
                   placeholder="Admin Name"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <input
                   name="admin_email"
                   placeholder="Admin Email"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <input
                   name="admin_phone"
                   placeholder="Admin Phone"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <input
                   name="admin_password"
                   type="password"
                   placeholder="Admin Password"
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-orange-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
               </>
             )}
@@ -166,7 +174,7 @@ export default function AddInstitutionAdminPage() {
 
           <button
             onClick={handleSubmit}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition"
           >
             Submit
           </button>

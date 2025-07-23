@@ -26,16 +26,13 @@ export default function Page() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (4MB = 4 * 1024 * 1024 bytes)
     const maxSizeInBytes = 4 * 1024 * 1024;
     if (file.size > maxSizeInBytes) {
       setStatus('❌ Logo file size must be less than 4MB. Please choose a smaller image.');
-      // Clear the file input
       e.target.value = '';
       return;
     }
 
-    // Clear any previous error messages
     setStatus('');
 
     const reader = new FileReader();
@@ -63,43 +60,43 @@ export default function Page() {
   if (!profile) {
     return (
       <InstituteLayout>
-        <div className="p-6">Loading...</div>
+        <div className="p-6 text-orange-600">Loading...</div>
       </InstituteLayout>
     );
   }
 
   return (
     <InstituteLayout>
-      <div className="p-6 max-w-3xl bg-sky-50 rounded shadow space-y-6">
-        <h1 className="text-2xl font-semibold text-sky-800">Update Institute Profile</h1>
+      <div className="p-6 max-w-3xl rounded shadow space-y-6">
+        <h1 className="text-2xl font-bold text-orange-700">Update Institute Profile</h1>
 
-        {status && <p className="text-sm text-sky-700">{status}</p>}
+        {status && <p className="text-sm font-semibold text-orange-600">{status}</p>}
 
         {/* Logo Upload */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Logo <span className="text-gray-500">(Max: 4MB)</span>
+          <label className="block text-sm font-medium text-orange-800 mb-1">
+            Logo <span className="text-xs text-gray-500">(Max: 4MB)</span>
           </label>
-          {editMode ? (
-            <input 
-              type="file" 
-              accept="image/*" 
+          {editMode && (
+            <input
+              type="file"
+              accept="image/*"
               onChange={handleLogoChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+              className="block w-full text-sm text-orange-800 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200"
             />
-          ) : null}
+          )}
           {profile.logo && (
-            <div className="mt-2">
+            <div className="mt-3">
               <img
                 src={profile.logo}
                 alt="Institution Logo"
-                className="h-16 rounded border"
+                className="h-16 w-auto rounded border border-orange-300 shadow-sm"
               />
             </div>
           )}
         </div>
 
-        {/* FORM FIELDS */}
+        {/* Profile Fields */}
         <div className="space-y-4">
           <FormRow label="Institute Name" name="name" value={profile.name} editable={false} />
           <FormRow label="Institute Code" name="code" value={profile.code} editable={false} />
@@ -112,13 +109,13 @@ export default function Page() {
           <FormRow label="Type" name="type" value={profile.type} onChange={handleChange} editable={editMode} />
         </div>
 
-        {/* BUTTONS */}
+        {/* Buttons */}
         <div className="flex justify-end gap-4">
           {editMode ? (
             <>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
               >
                 Save
               </button>
@@ -132,7 +129,7 @@ export default function Page() {
           ) : (
             <button
               onClick={() => setEditMode(true)}
-              className="px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 transition"
+              className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
             >
               Edit Profile
             </button>
@@ -143,21 +140,23 @@ export default function Page() {
   );
 }
 
-// Reusable form input row
+// Reusable input row
 function FormRow({ label, name, value, onChange, editable }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-orange-800 mb-1">{label}</label>
       {editable ? (
         <input
           type="text"
           name={name}
           value={value || ''}
           onChange={onChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="w-full px-3 py-2 border border-orange-300 rounded focus:ring-2 focus:ring-orange-400 text-sm"
         />
       ) : (
-        <p className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-gray-800">{value}</p>
+        <p className="px-3 py-2 bg-white border border-orange-200 rounded text-orange-900 text-sm">
+          {value}
+        </p>
       )}
     </div>
   );

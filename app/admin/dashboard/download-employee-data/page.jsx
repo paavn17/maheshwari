@@ -48,14 +48,17 @@ export default function SuperAdminEmployeesPage() {
   return (
     <DashboardLayout>
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-sky-800 mb-6">📋 Employee Viewer (By Company)</h1>
+        <h1 className="text-2xl font-bold text-orange-700 mb-6">
+          📋 Employee Viewer (By Company)
+        </h1>
 
-        <div className="flex gap-4 items-center mb-6">
-          <label className="text-gray-700 font-medium">Select Company:</label>
+        <div className="flex flex-col md:flex-row gap-4 items-center mb-6">
+          <label className="text-gray-700 font-medium whitespace-nowrap">Select Company:</label>
+
           <select
             value={selectedId}
             onChange={handleInstitutionChange}
-            className="p-2 border rounded"
+            className="p-2 border border-orange-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
             <option value="">-- Select Institution --</option>
             {institutions.map((inst) => (
@@ -68,7 +71,7 @@ export default function SuperAdminEmployeesPage() {
           <button
             onClick={handleDownload}
             disabled={!employees.length}
-            className="ml-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+            className="ml-auto bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded shadow disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             ⬇️ Download Excel
           </button>
@@ -77,7 +80,7 @@ export default function SuperAdminEmployeesPage() {
         {employees.length > 0 ? (
           <div className="overflow-auto border border-gray-300 rounded shadow">
             <table className="min-w-full text-sm">
-              <thead className="bg-gray-100 sticky top-0">
+              <thead className="bg-orange-100 sticky top-0">
                 <tr>
                   <th className="px-3 py-2 text-left">Name</th>
                   <th className="px-3 py-2 text-left">Emp ID</th>
@@ -89,7 +92,7 @@ export default function SuperAdminEmployeesPage() {
               </thead>
               <tbody>
                 {employees.map((emp) => (
-                  <tr key={emp.id} className="even:bg-white odd:bg-gray-50">
+                  <tr key={emp.id} className="even:bg-white odd:bg-orange-50">
                     <td className="px-3 py-2">{emp.name}</td>
                     <td className="px-3 py-2">{emp.emp_id}</td>
                     <td className="px-3 py-2">{emp.mobile}</td>

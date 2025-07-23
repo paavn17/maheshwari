@@ -3,40 +3,52 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/institute/page-layout';
 
+// Enhanced Stat Card: orange-400 theme, subtle shadows, icon support, hover effects
+function Card({ label, value, icon }) {
+  return (
+    <div className="p-5 rounded-xl shadow-lg bg-orange-400 text-white flex flex-col items-start hover:scale-105 transition-transform duration-150">
+      <div className="flex items-center gap-2 mb-1">
+        {icon && <span className="text-2xl">{icon}</span>}
+        <div className="text-xs uppercase tracking-wider">{label}</div>
+      </div>
+      <div className="text-3xl font-extrabold">{value}</div>
+    </div>
+  );
+}
+
 export default function InstituteDashboardPage() {
   const [students, setStudents] = useState([]);
   const [stats, setStats] = useState(null);
   const [institution, setInstitution] = useState(null);
 
   useEffect(() => {
-  async function load() {
-    const res = await fetch('/api/institute/dashboard');
-    const data = await res.json();
+    async function load() {
+      const res = await fetch('/api/institute/dashboard');
+      const data = await res.json();
 
-    if (res.ok) {
-      setStudents(data.students);
-      setStats(data.stats);
-      if (data.institution) {
-        setInstitution(data.institution); // ✅ use this instead of student[0]
+      if (res.ok) {
+        setStudents(data.students);
+        setStats(data.stats);
+        if (data.institution) {
+          setInstitution(data.institution);
+        }
+      } else {
+        console.error('Failed to load dashboard:', data.error);
       }
-    } else {
-      console.error('Failed to load dashboard:', data.error);
     }
-  }
 
-  load();
-}, []);
-
+    load();
+  }, []);
 
   if (!stats) {
     return (
       <DashboardLayout>
-        <div className="p-6">Loading...</div>
+        <div className="p-6 text-orange-600 font-semibold">Loading...</div>
       </DashboardLayout>
     );
   }
 
-  // Compute extra breakdowns
+  // Compute breakdowns
   const studentTypeCounts = students.reduce((acc, student) => {
     const type = student.student_type || 'Unknown';
     acc[type] = (acc[type] || 0) + 1;
@@ -51,79 +63,71 @@ export default function InstituteDashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-3 mb-2">
-  {institution?.logo && (
-    <img
-      src={institution.logo}
-      alt="Institution Logo"
-      className="h-10 w-10 object-contain rounded"
-    />
-  )}
-  <h1 className="text-2xl font-bold text-sky-800">
-     {institution?.name || 'Your Institution'} ({institution?.code || 'Code'})
-  </h1>
-</div>
-
+      <div className="p-6 space-y-8  min-h-screen">
+        <div className="flex items-center gap-4 mb-4">
+          {institution?.logo && (
+            <img
+              src={institution.logo}
+              alt="Institution Logo"
+              className="h-14 w-14 object-contain rounded-lg shadow"
+            />
+          )}
+          <h1 className="text-3xl font-extrabold text-orange-700 drop-shadow-sm">
+            {institution?.name || 'Your Institution'}{' '}
+            <span className="text-sm font-medium text-orange-500">({institution?.code || 'Code'})</span>
+          </h1>
+        </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card label="Total Students" value={stats.totalStudents} color="bg-sky-500" />
-          <Card label="Paid Students" value={stats.paid} color="bg-green-500" />
-          <Card label="Unpaid Students" value={stats.unpaid} color="bg-yellow-500" />
-          <Card label="Missing Photos" value={stats.noImage} color="bg-red-500" />
-          <Card label="Total Branches" value={stats.totalBranches} color="bg-indigo-500" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <Card label="Total Students" value={stats.totalStudents}  />
+          <Card label="Paid Students" value={stats.paid}  />
+          <Card label="Unpaid Students" value={stats.unpaid} />
+          <Card label="Missing Photos" value={stats.noImage}  />
+          <Card label="Total Branches" value={stats.totalBranches} />
         </div>
 
         {/* Year-wise breakdown */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2 text-sky-700">📊 Year-wise Student Count</h3>
-          <ul className="list-disc ml-6 text-sm text-gray-700">
+        <section className="bg-white/60 rounded-lg p-5 shadow mt-6">
+          <h3 className="text-lg font-semibold mb-2 text-orange-700"> Year-wise Student Count</h3>
+          <ul className="list-disc ml-6 text-sm text-orange-900 space-y-0.5">
             {stats.uniqueYears.map((year, i) => {
               const count = students.filter((s) => s.class === year).length;
               return (
                 <li key={i}>
-                  {year}: {count} student{count !== 1 ? 's' : ''}
+                  {year}: <span className="font-bold">{count}</span> student{count !== 1 ? 's' : ''}
                 </li>
               );
             })}
           </ul>
-        </div>
+        </section>
 
         {/* Student Type Breakdown */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2 text-sky-700">🎓 Student Type</h3>
-          <ul className="list-disc ml-6 text-sm text-gray-700">
+        <section className="bg-white/60 rounded-lg p-5 shadow mt-6">
+          <h3 className="text-lg font-semibold mb-2 text-orange-700"> Student Type</h3>
+          <ul className="list-disc ml-6 text-sm text-orange-900 space-y-0.5">
             {Object.entries(studentTypeCounts).map(([type, count]) => (
               <li key={type}>
-                {type}: {count}
+                {type}: <span className="font-bold">{count}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
 
         {/* Gender Breakdown */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2 text-sky-700">🧑‍🤝‍🧑 Gender Distribution</h3>
-          <ul className="list-disc ml-6 text-sm text-gray-700">
+        <section className="bg-white/60 rounded-lg p-5 shadow mt-6">
+          <h3 className="text-lg font-semibold mb-2 text-orange-700"> Gender Distribution</h3>
+          <ul className="list-disc ml-6 text-sm text-orange-900 space-y-0.5">
             {Object.entries(genderCounts).map(([gender, count]) => (
               <li key={gender}>
-                {gender}: {count}
+                {gender}: <span className="font-bold">{count}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       </div>
     </DashboardLayout>
   );
 }
 
-// Stat Card Component
-function Card({ label, value, color }) {
-  return (
-    <div className={`p-4 rounded shadow text-white ${color}`}>
-      <div className="text-sm uppercase tracking-wider font-medium">{label}</div>
-      <div className="text-2xl font-bold mt-1">{value}</div>
-    </div>
-  );
-}
+

@@ -75,7 +75,7 @@ export default function ImageCropper() {
     const toBase64 = (blob) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result); // base64 string
+        reader.onloadend = () => resolve(reader.result);
         reader.onerror = reject;
         reader.readAsDataURL(blob);
       });
@@ -86,12 +86,6 @@ export default function ImageCropper() {
     try {
       const frontBase64 = await toBase64(frontBlob);
       const backBase64 = await toBase64(backBlob);
-
-      console.log('🟡 Submitting design:', {
-        name: designName,
-        front_img: frontBase64.substring(0, 30) + '...',
-        back_img: backBase64.substring(0, 30) + '...',
-      });
 
       const res = await fetch('/api/superadmin/card-designs', {
         method: 'POST',
@@ -104,8 +98,6 @@ export default function ImageCropper() {
       });
 
       const text = await res.text();
-      console.log('🟢 Server Response Text:', text);
-
       let data;
       try {
         data = JSON.parse(text);
@@ -144,8 +136,8 @@ export default function ImageCropper() {
             className="file:mr-4 file:py-2 file:px-4
                        file:rounded file:border-0
                        file:text-sm file:font-semibold
-                       file:bg-sky-200 file:text-gray-700
-                       hover:file:bg-sky-300 max-w-xs hover:cursor-pointer"
+                       file:bg-orange-200 file:text-gray-700
+                       hover:file:bg-orange-300 max-w-xs hover:cursor-pointer"
           />
         </div>
       )}
@@ -175,14 +167,14 @@ export default function ImageCropper() {
               step={0.1}
               onChange={(e, z) => setZoom(z)}
               aria-label="Zoom"
-              sx={{ color: '#0ea5e9' }}
+              sx={{ color: '#fb923c' }} // orange-400
             />
           </div>
 
           <div className="flex justify-between gap-4">
             <button
               onClick={handleCropAndContinue}
-              className="flex-1 bg-sky-500 text-white py-2 rounded hover:bg-sky-700 transition"
+              className="flex-1 bg-orange-400 text-white py-2 rounded hover:bg-orange-600 transition"
             >
               {step === 'front' ? 'Crop Front' : 'Crop Back'}
             </button>
@@ -226,7 +218,7 @@ export default function ImageCropper() {
               type="text"
               value={designName}
               onChange={(e) => setDesignName(e.target.value)}
-              placeholder="e.g. Modern Blue"
+              placeholder="e.g. Modern Orange"
               className="w-full border px-3 py-2 rounded"
             />
           </div>
@@ -234,7 +226,7 @@ export default function ImageCropper() {
           <button
             onClick={handleSubmitDesign}
             disabled={isSubmitting || !designName}
-            className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-800 transition disabled:opacity-50"
+            className="w-full bg-orange-400 text-white py-2 rounded hover:bg-orange-600 transition disabled:opacity-50"
           >
             {isSubmitting ? 'Uploading...' : 'Upload Design to Database'}
           </button>
