@@ -9,12 +9,14 @@ export default function SuperAdminEmployeesPage() {
   const [selectedId, setSelectedId] = useState('');
   const [employees, setEmployees] = useState([]);
 
+  // Fetch institution list on mount
   const fetchInstitutions = async () => {
     const res = await fetch('/api/superadmin/employees/companies');
     const data = await res.json();
     if (data.success) setInstitutions(data.institutions);
   };
 
+  // Fetch employees by institution ID
   const fetchEmployees = async (institution_id) => {
     const res = await fetch('/api/superadmin/employees/by-institution', {
       method: 'POST',
@@ -23,8 +25,10 @@ export default function SuperAdminEmployeesPage() {
     });
     const data = await res.json();
     if (data.success) setEmployees(data.employees);
+    else setEmployees([]);
   };
 
+  // Handle institution dropdown change
   const handleInstitutionChange = (e) => {
     const id = e.target.value;
     setSelectedId(id);
@@ -32,10 +36,13 @@ export default function SuperAdminEmployeesPage() {
     else setEmployees([]);
   };
 
+  // Export employees as Excel file, excluding image data
   const handleDownload = () => {
     if (!employees.length) return;
 
-    const worksheet = XLSX.utils.json_to_sheet(employees);
+    // Exclude profile picture for export
+    const exportable = employees.map(({ profile_pic, ...rest }) => rest);
+    const worksheet = XLSX.utils.json_to_sheet(exportable);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees');
     XLSX.writeFile(workbook, `employees_${selectedId}.xlsx`);
@@ -53,7 +60,9 @@ export default function SuperAdminEmployeesPage() {
         </h1>
 
         <div className="flex flex-col md:flex-row gap-4 items-center mb-6">
-          <label className="text-gray-700 font-medium whitespace-nowrap">Select Company:</label>
+          <label className="text-gray-700 font-medium whitespace-nowrap">
+            Select Company:
+          </label>
 
           <select
             value={selectedId}
@@ -82,6 +91,7 @@ export default function SuperAdminEmployeesPage() {
             <table className="min-w-full text-sm">
               <thead className="bg-orange-100 sticky top-0">
                 <tr>
+                  <th className="px-3 py-2 text-left">Photo</th>
                   <th className="px-3 py-2 text-left">Name</th>
                   <th className="px-3 py-2 text-left">Emp ID</th>
                   <th className="px-3 py-2 text-left">Mobile</th>
@@ -93,6 +103,19 @@ export default function SuperAdminEmployeesPage() {
               <tbody>
                 {employees.map((emp) => (
                   <tr key={emp.id} className="even:bg-white odd:bg-orange-50">
+                    <td className="px-3 py-2">
+                      {emp.profile_pic ? (
+                        <img
+                          src={emp.profile_pic}
+                          alt="Profile"
+                          className="w-14 h-14 object-cover rounded-full border border-orange-200 shadow"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs">
+                          No Image
+                        </div>
+                      )}
+                    </td>
                     <td className="px-3 py-2">{emp.name}</td>
                     <td className="px-3 py-2">{emp.emp_id}</td>
                     <td className="px-3 py-2">{emp.mobile}</td>

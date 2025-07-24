@@ -30,7 +30,7 @@ export async function PUT(req) {
     }
 
     const [result] = await db.execute(
-      `UPDATE institution_admins SET password = ? WHERE id = 1`,
+      `UPDATE super_admins SET password = ? WHERE id = 1`,
       [newPassword]
     );
 
