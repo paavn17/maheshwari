@@ -5,47 +5,78 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function POST(req) {
   try {
-    // ✅ 1. Verify token and get admin_id
+    // Verify token and check admin role
     const token = req.cookies.get('token')?.value;
-    if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
+    if (payload.role !== 'institution admin')
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+
     const admin_id = payload.id;
 
-    // ✅ 2. Get institution_id from admin
+    // Get institution_id for admin
     const [[admin]] = await db.query(
       'SELECT institution_id FROM institution_admins WHERE id = ?',
       [admin_id]
     );
 
-    if (!admin) return Response.json({ error: 'Invalid admin' }, { status: 403 });
+    if (!admin) return new Response(JSON.stringify({ error: 'Invalid admin' }), { status: 403 });
     const institution_id = admin.institution_id;
 
-    // ✅ 3. Parse employee list
+    // Parse employees from request body
     const body = await req.json();
     const employees = body.employees || [];
 
     if (!employees.length) {
-      return Response.json({ success: false, error: 'No employee data received' });
+      return new Response(JSON.stringify({ success: false, error: 'No employee data received' }));
     }
 
-    // ✅ 4. Insert employees one by one
-    for (const emp of employees) {
+    for (let i = 0; i < employees.length; i++) {
+      const emp = employees[i];
       const {
-        name = '', father_name = '', emp_id = '', pf_no = '', designation = '', department = '',
-        doj = null, dob = null, gender = '', mobile = '', email = '', adhaar_no = '',
-        blood_group = '', identification = '', address = '', profile_pic = ''
+        name = '',
+        father_name = '',
+        emp_id = '',
+        pf_no = '',
+        designation = '',
+        department = '',
+        doj = null,
+        dob = null,
+        gender = '',
+        mobile = '',
+        email = '',
+        adhaar_no = '',
+        blood_group = '',
+        identification = '',
+        address = '',
+        profile_pic = '',
       } = emp;
 
-      // Skip if required fields are missing
-      if (!name || !emp_id || !mobile) continue;
-
-      // ✅ Convert base64 image to Buffer if exists
-      let profileBuffer = null;
-      if (profile_pic?.startsWith?.('data:image')) {
-        const base64 = profile_pic.split(',')[1];
-        profileBuffer = Buffer.from(base64, 'base64');
+      // Check mandatory fields for ID card + photo, send error for first failing row
+      if (!name || !emp_id || !mobile || !dob || !blood_group) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Missing mandatory fields in row ${i + 2}`,
+          }),
+          { status: 400 }
+        );
       }
+
+      if (!profile_pic || !profile_pic.startsWith('data:image')) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Profile photo is required and must be a valid image (row ${i + 2})`,
+          }),
+          { status: 400 }
+        );
+      }
+
+      // Convert base64 image to Buffer for DB storage
+      const base64 = profile_pic.split(',')[1];
+      const profileBuffer = Buffer.from(base64, 'base64');
 
       await db.query(
         `INSERT INTO employees (
@@ -71,14 +102,14 @@ export async function POST(req) {
           blood_group,
           identification,
           address,
-          profileBuffer
+          profileBuffer,
         ]
       );
     }
 
-    return Response.json({ success: true });
+    return new Response(JSON.stringify({ success: true }));
   } catch (err) {
     console.error('Bulk upload error:', err);
-    return Response.json({ success: false, error: 'Server error' });
+    return new Response(JSON.stringify({ success: false, error: 'Server error' }), { status: 500 });
   }
 }

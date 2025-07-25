@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/institute/page-layout';
 
-// Enhanced Stat Card: orange-400 theme, subtle shadows, icon support, hover effects
-function Card({ label, value, icon }) {
+// Enhanced Stat Card with customizable background color and icons
+function Card({ label, value, icon, colorClass }) {
   return (
-    <div className="p-5 rounded-xl shadow-lg bg-orange-400 text-white flex flex-col items-start hover:scale-105 transition-transform duration-150">
+    <div
+      className={`p-5 rounded-xl shadow-lg ${colorClass} text-white flex flex-col items-start hover:scale-105 transition-transform duration-150`}
+    >
       <div className="flex items-center gap-2 mb-1">
         {icon && <span className="text-2xl">{icon}</span>}
         <div className="text-xs uppercase tracking-wider">{label}</div>
@@ -63,7 +65,7 @@ export default function InstituteDashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-8  min-h-screen">
+      <div className="p-6 space-y-8 min-h-screen">
         <div className="flex items-center gap-4 mb-4">
           {institution?.logo && (
             <img
@@ -74,22 +76,51 @@ export default function InstituteDashboardPage() {
           )}
           <h1 className="text-3xl font-extrabold text-orange-700 drop-shadow-sm">
             {institution?.name || 'Your Institution'}{' '}
-            <span className="text-sm font-medium text-orange-500">({institution?.code || 'Code'})</span>
+            <span className="text-sm font-medium text-orange-500">
+              ({institution?.code || 'Code'})
+            </span>
           </h1>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards with different harmonious colors */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <Card label="Total Students" value={stats.totalStudents}  />
-          <Card label="Paid Students" value={stats.paid}  />
-          <Card label="Unpaid Students" value={stats.unpaid} />
-          <Card label="Missing Photos" value={stats.noImage}  />
-          <Card label="Total Branches" value={stats.totalBranches} />
+          <Card
+            colorClass="bg-orange-400"
+            label="Total Students"
+            value={stats.totalStudents}
+            icon="🎓"
+          />
+          <Card
+            colorClass="bg-amber-400"
+            label="Paid Students"
+            value={stats.paid}
+            icon="💰"
+          />
+          <Card
+            colorClass="bg-yellow-400 text-orange-900"
+            label="Unpaid Students"
+            value={stats.unpaid}
+            icon="🕒"
+          />
+          <Card
+            colorClass="bg-rose-400"
+            label="Missing Photos"
+            value={stats.noImage}
+            icon="📷"
+          />
+          <Card
+            colorClass="bg-orange-300"
+            label="Total Branches"
+            value={stats.totalBranches}
+            icon="🏢"
+          />
         </div>
 
         {/* Year-wise breakdown */}
         <section className="bg-white/60 rounded-lg p-5 shadow mt-6">
-          <h3 className="text-lg font-semibold mb-2 text-orange-700"> Year-wise Student Count</h3>
+          <h3 className="text-lg font-semibold mb-2 text-orange-700">
+            Year-wise Student Count
+          </h3>
           <ul className="list-disc ml-6 text-sm text-orange-900 space-y-0.5">
             {stats.uniqueYears.map((year, i) => {
               const count = students.filter((s) => s.class === year).length;
@@ -104,7 +135,9 @@ export default function InstituteDashboardPage() {
 
         {/* Student Type Breakdown */}
         <section className="bg-white/60 rounded-lg p-5 shadow mt-6">
-          <h3 className="text-lg font-semibold mb-2 text-orange-700"> Student Type</h3>
+          <h3 className="text-lg font-semibold mb-2 text-orange-700">
+            Student Type
+          </h3>
           <ul className="list-disc ml-6 text-sm text-orange-900 space-y-0.5">
             {Object.entries(studentTypeCounts).map(([type, count]) => (
               <li key={type}>
@@ -116,7 +149,9 @@ export default function InstituteDashboardPage() {
 
         {/* Gender Breakdown */}
         <section className="bg-white/60 rounded-lg p-5 shadow mt-6">
-          <h3 className="text-lg font-semibold mb-2 text-orange-700"> Gender Distribution</h3>
+          <h3 className="text-lg font-semibold mb-2 text-orange-700">
+            Gender Distribution
+          </h3>
           <ul className="list-disc ml-6 text-sm text-orange-900 space-y-0.5">
             {Object.entries(genderCounts).map(([gender, count]) => (
               <li key={gender}>
@@ -129,5 +164,3 @@ export default function InstituteDashboardPage() {
     </DashboardLayout>
   );
 }
-
-

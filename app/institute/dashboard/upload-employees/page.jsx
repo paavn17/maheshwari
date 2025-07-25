@@ -23,20 +23,31 @@ export default function UploadEmployeesPage() {
     address: '',
   };
 
-  const requiredFields = ['name', 'emp_id', 'mobile'];
+  // Required fields for ID card + photo mandated
+  const requiredFields = ['name', 'emp_id', 'mobile', 'dob', 'blood_group'];
+
+  // Single employee form state
   const [formData, setFormData] = useState(initialForm);
   const [imageBase64, setImageBase64] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
+  const [formErrors, setFormErrors] = useState([]);
+  const [formStatus, setFormStatus] = useState('');
+
+  // Bulk upload states
   const [fileData, setFileData] = useState([]);
   const [imageMap, setImageMap] = useState({});
+  const [bulkErrors, setBulkErrors] = useState([]);
+  const [bulkStatus, setBulkStatus] = useState('');
+
   const fileInputRef = useRef(null);
   const folderInputRef = useRef(null);
 
+  // Input change for manual form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Image upload for manual form
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -45,41 +56,73 @@ export default function UploadEmployeesPage() {
     reader.readAsDataURL(file);
   };
 
-  const isFormValid = () => requiredFields.every((field) => formData[field]?.trim() !== '');
+  // Validate manual form with required fields & photo
+  const validateManualForm = () => {
+    const errors = [];
+    requiredFields.forEach((field) => {
+      if (!formData[field] || formData[field].toString().trim() === '') {
+        errors.push(`Field "${field.replace(/_/g, ' ')}" is required.`);
+      }
+    });
+    if (!imageBase64) errors.push('Profile photo is required.');
+    setFormErrors(errors);
+    return errors.length === 0;
+  };
 
+  // Manual form submit
   const handleManualSubmit = async () => {
-    if (!isFormValid()) {
-      setStatusMessage('❌ Please fill all required fields marked with *');
+    if (!validateManualForm()) {
+      setFormStatus('❌ Please fix the errors above.');
       return;
     }
-
-    const payload = {
-      ...formData,
-      profile_pic: imageBase64,
-    };
-
-    setStatusMessage('⏳ Adding employee...');
-
+    setFormStatus('⏳ Adding employee...');
     try {
+      const payload = { ...formData, profile_pic: imageBase64 };
       const res = await fetch('/api/institute/employees/add-single', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       const data = await res.json();
-      setStatusMessage(data.success ? '✅ Employee added successfully' : `❌ ${data.error}`);
-      setFormData(initialForm);
-      setImageBase64('');
+      if (res.ok && data.success) {
+        setFormStatus('✅ Employee added successfully');
+        setFormData(initialForm);
+        setImageBase64('');
+        setFormErrors([]);
+      } else {
+        setFormStatus(`❌ ${data.error || 'Failed to add employee'}`);
+      }
     } catch (err) {
       console.error(err);
-      setStatusMessage('❌ Network error');
+      setFormStatus('❌ Network error');
     }
   };
 
+  // Bulk upload validation (required fields + image preview required)
+  const validateFileData = (data) => {
+    const errors = [];
+    data.forEach((employee, idx) => {
+      const missingFields = [];
+      requiredFields.forEach((field) => {
+        if (!employee[field] || employee[field].toString().trim() === '') {
+          missingFields.push(field);
+        }
+      });
+      if (!employee.preview) missingFields.push('profile photo (missing image)');
+      if (missingFields.length) {
+        errors.push(`Row ${idx + 2}: Missing fields - ${missingFields.join(', ')}`);
+      }
+    });
+    return errors;
+  };
+
+  // Excel file change handler (load and preview)
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setBulkStatus('');
+    setBulkErrors([]);
+    setFileData([]);
 
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -87,45 +130,36 @@ export default function UploadEmployeesPage() {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(sheet);
 
-      const invalidRow = json.findIndex((row) =>
-        requiredFields.some((field) => !row[field]?.toString().trim())
-      );
-
-      if (invalidRow !== -1) {
-        setStatusMessage(`❌ Missing required fields in row ${invalidRow + 2}`);
-        setFileData([]);
-        return;
-      }
-
       const enriched = json.map((row) => {
-        const matchKey = row.emp_id?.toString();
-        const matchedImage = imageMap[matchKey];
-        return matchedImage ? { ...row, preview: matchedImage } : row;
+        const key = row.emp_id?.toString();
+        const preview = imageMap[key] || null;
+        return preview ? { ...row, preview } : row;
       });
 
       setFileData(enriched);
-      setStatusMessage(`📄 Loaded ${json.length} employees from Excel`);
+      setBulkStatus(`📄 Loaded ${json.length} employees from Excel.`);
     };
     reader.readAsBinaryString(file);
   };
 
-  const handleCellChange = (index, field, value) => {
-    setFileData((prev) => {
-      const updated = [...prev];
-      updated[index][field] = value;
-      return updated;
-    });
-  };
-
+  // Folder upload for employee photos
   const handleFolderUpload = (e) => {
     const files = e.target.files;
+    if (!files.length) {
+      setBulkErrors(['Please select a folder with employee images.']);
+      setFileData([]);
+      return;
+    }
+    setBulkErrors([]);
+    setBulkStatus('');
+
     const newImageMap = {};
-    const pending = [];
+    const readers = [];
 
     Array.from(files).forEach((file) => {
-      const key = file.name.split('.')[0];
+      const key = file.name.split('.')[0]; // filename without extension = emp_id
       const reader = new FileReader();
-      pending.push(
+      readers.push(
         new Promise((resolve) => {
           reader.onloadend = () => {
             newImageMap[key] = reader.result;
@@ -136,23 +170,52 @@ export default function UploadEmployeesPage() {
       );
     });
 
-    Promise.all(pending).then(() => {
+    Promise.all(readers).then(() => {
       setImageMap(newImageMap);
-      setStatusMessage(`🖼️ Loaded ${Object.keys(newImageMap).length} images.`);
+      setBulkStatus(`🖼️ Loaded ${Object.keys(newImageMap).length} images.`);
+      setFileData((prevData) =>
+        prevData.map((employee) => {
+          const roll = employee.emp_id?.toString();
+          const preview = newImageMap[roll];
+          return preview ? { ...employee, preview } : employee;
+        })
+      );
     });
   };
 
+  // Inline edit in bulk preview table
+  const handleCellChange = (index, field, value) => {
+    setFileData((prev) => {
+      const newData = [...prev];
+      newData[index][field] = value;
+      return newData;
+    });
+  };
+
+  // Bulk upload submit
   const handleBulkUpload = async () => {
     if (!fileData.length) {
-      setStatusMessage('❌ Please select a valid Excel file.');
+      setBulkStatus('❌ Please select a valid Excel file.');
+      return;
+    }
+    if (Object.keys(imageMap).length === 0) {
+      setBulkStatus('❌ Please upload the employee images folder.');
       return;
     }
 
-    setStatusMessage('⏳ Uploading employees...');
+    const errors = validateFileData(fileData);
+    if (errors.length) {
+      setBulkErrors(errors);
+      setBulkStatus('❌ Please fix the above errors before uploading.');
+      return;
+    }
+
+    setBulkStatus('⏳ Uploading employees...');
+    setBulkErrors([]);
     try {
-      const payload = fileData.map((emp) => ({
-        ...emp,
-        profile_pic: imageMap[emp.emp_id?.toString()] || '',
+      const payload = fileData.map(({ preview, ...rest }) => ({
+        ...rest,
+        profile_pic: preview || '',
       }));
 
       const res = await fetch('/api/institute/employees/bulk-upload', {
@@ -160,25 +223,40 @@ export default function UploadEmployeesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ employees: payload }),
       });
-
       const data = await res.json();
-      setStatusMessage(data.success ? '✅ Bulk upload successful!' : `❌ ${data.error}`);
-      setFileData([]);
-      fileInputRef.current.value = null;
-    } catch (err) {
-      console.error(err);
-      setStatusMessage('❌ Upload failed.');
+      if (res.ok && data.success) {
+        setBulkStatus('✅ Bulk upload successful!');
+        setFileData([]);
+        fileInputRef.current.value = null;
+        folderInputRef.current.value = null;
+        setImageMap({});
+        setBulkErrors([]);
+      } else {
+        setBulkStatus(`❌ ${data.error || 'Upload failed'}`);
+      }
+    } catch (error) {
+      console.error(error);
+      setBulkStatus('❌ Upload failed due to network error.');
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="p-6  min-h-screen">
-        <h1 className="text-3xl font-bold text-orange-700 mb-6"> Upload Employee Data</h1>
+      <div className="p-6 min-h-screen max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-orange-700 mb-6">Upload Employee Data</h1>
 
-        {/* Single Upload */}
+        {/* Single Entry Form */}
         <section className="mb-12">
-          <h2 className="text-xl font-semibold text-orange-600 mb-4"> Add Single Employee</h2>
+          <h2 className="text-xl font-semibold text-orange-600 mb-4">Add Single Employee</h2>
+          {formErrors.length > 0 && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-300 max-w-4xl">
+              <ul className="list-disc pl-5 text-sm max-h-40 overflow-auto">
+                {formErrors.map((err, idx) => (
+                  <li key={idx}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 max-w-6xl">
             {Object.entries(formData).map(([key, value]) => (
               <div key={key}>
@@ -191,40 +269,38 @@ export default function UploadEmployeesPage() {
                   value={value}
                   onChange={handleInputChange}
                   className="p-2 border border-orange-300 rounded w-full text-sm focus:ring-2 focus:ring-orange-400"
+                  placeholder={`Enter ${key.replace(/_/g, ' ')}`}
                 />
               </div>
             ))}
-
             <div>
-              <label className="block text-sm font-medium text-orange-800 mb-1">Profile Picture</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="text-sm"
-              />
+              <label className="block text-sm font-medium text-orange-800 mb-1">Profile Picture *</label>
+              <input type="file" accept="image/*" onChange={handleImageChange} className="text-sm" />
               {imageBase64 && (
                 <img
                   src={imageBase64}
-                  alt="Preview"
+                  alt="Profile Preview"
                   className="mt-2 w-28 h-28 object-cover border border-orange-300 rounded shadow"
                 />
               )}
             </div>
           </div>
-
           <button
             onClick={handleManualSubmit}
             className="mt-5 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded shadow font-semibold"
           >
             ➕ Add Employee
           </button>
+          {formStatus && <p className="mt-3 text-sm font-semibold text-orange-800">{formStatus}</p>}
         </section>
 
         {/* Bulk Upload */}
         <section>
-          <h2 className="text-xl font-semibold text-orange-600 mb-4"> Upload via Excel</h2>
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
+          <h2 className="text-xl font-semibold text-orange-600 mb-4">Upload via Excel</h2>
+          <p className="text-sm mb-4 text-orange-700 max-w-xl">
+            Upload an Excel file with employee data (without photos) and a folder with employee images named by emp_id.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4 max-w-xl">
             <input
               type="file"
               accept=".xlsx, .xls"
@@ -235,6 +311,7 @@ export default function UploadEmployeesPage() {
             <input
               type="file"
               webkitdirectory="true"
+              directory=""
               multiple
               ref={folderInputRef}
               onChange={handleFolderUpload}
@@ -242,14 +319,26 @@ export default function UploadEmployeesPage() {
             />
             <button
               onClick={handleBulkUpload}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded shadow transition font-medium"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded shadow"
             >
               Upload File
             </button>
           </div>
 
+          {bulkErrors.length > 0 && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-300 max-w-4xl">
+              <ul className="list-disc pl-5 text-sm max-h-40 overflow-auto">
+                {bulkErrors.map((err, idx) => (
+                  <li key={idx}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {bulkStatus && <p className="text-sm mt-2 text-orange-800 font-semibold">{bulkStatus}</p>}
+
           {fileData.length > 0 && (
-            <div className="overflow-auto max-h-[500px] border border-orange-300 rounded-lg shadow">
+            <div className="overflow-auto mt-6 max-h-[500px] border border-orange-300 rounded shadow max-w-full">
               <table className="min-w-full text-sm table-fixed border-collapse">
                 <thead className="bg-orange-100 sticky top-0 z-10 text-orange-800">
                   <tr>
@@ -269,8 +358,8 @@ export default function UploadEmployeesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {fileData.map((row, index) => (
-                    <tr key={index} className="even:bg-orange-50 odd:bg-white">
+                  {fileData.map((row, idx) => (
+                    <tr key={idx} className="even:bg-orange-50 odd:bg-white">
                       {Object.entries(row)
                         .filter(([key]) => key !== 'preview')
                         .map(([field, value]) => (
@@ -278,7 +367,7 @@ export default function UploadEmployeesPage() {
                             <input
                               type="text"
                               value={value}
-                              onChange={(e) => handleCellChange(index, field, e.target.value)}
+                              onChange={(e) => handleCellChange(idx, field, e.target.value)}
                               className="w-full p-1 border border-orange-300 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-orange-400"
                             />
                           </td>
@@ -287,7 +376,7 @@ export default function UploadEmployeesPage() {
                         {row.preview ? (
                           <img
                             src={row.preview}
-                            alt="preview"
+                            alt="Preview"
                             className="w-12 h-12 object-cover rounded border shadow"
                           />
                         ) : (
@@ -299,10 +388,6 @@ export default function UploadEmployeesPage() {
                 </tbody>
               </table>
             </div>
-          )}
-
-          {statusMessage && (
-            <p className="text-sm mt-6 font-medium text-orange-700">{statusMessage}</p>
           )}
         </section>
       </div>
