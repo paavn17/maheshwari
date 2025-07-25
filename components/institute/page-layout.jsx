@@ -55,11 +55,6 @@ export default function InstituteLayout({ children }) {
       icon: <UserCircle size={18} className="mr-2" />,
     },
     {
-      label: 'Access Control',
-      href: '/institute/dashboard/access-control',
-      icon: <ShieldCheck size={18} className="mr-2" />,
-    },
-    {
       label: 'Payment',
       href: '/institute/dashboard/payment',
       icon: <CreditCard size={18} className="mr-2" />,

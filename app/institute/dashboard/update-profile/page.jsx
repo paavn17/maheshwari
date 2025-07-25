@@ -13,6 +13,7 @@ export default function Page() {
       const res = await fetch('/api/institute/profile');
       const data = await res.json();
       if (res.ok) setProfile(data.profile);
+      else setStatus(data.error || 'Failed to load profile.');
     };
     fetchProfile();
   }, []);
@@ -26,7 +27,7 @@ export default function Page() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const maxSizeInBytes = 4 * 1024 * 1024;
+    const maxSizeInBytes = 4 * 1024 * 1024; // 4 MB
     if (file.size > maxSizeInBytes) {
       setStatus('❌ Logo file size must be less than 4MB. Please choose a smaller image.');
       e.target.value = '';
@@ -60,7 +61,7 @@ export default function Page() {
   if (!profile) {
     return (
       <InstituteLayout>
-        <div className="p-6 text-orange-600">Loading...</div>
+        <div className="p-6 text-orange-600 font-semibold">Loading...</div>
       </InstituteLayout>
     );
   }
@@ -140,23 +141,23 @@ export default function Page() {
   );
 }
 
-// Reusable input row
+// Reusable input row component with min-width fix for null values
 function FormRow({ label, name, value, onChange, editable }) {
   return (
-    <div>
+    <div className="w-full">
       <label className="block text-sm font-medium text-orange-800 mb-1">{label}</label>
       {editable ? (
         <input
           type="text"
           name={name}
-          value={value || ''}
+          value={value == null ? '' : value}
           onChange={onChange}
-          className="w-full px-3 py-2 border border-orange-300 rounded focus:ring-2 focus:ring-orange-400 text-sm"
+          className="w-full min-w-[200px] px-3 py-2 border border-orange-300 rounded focus:ring-2 focus:ring-orange-400 text-sm"
         />
       ) : (
-        <p className="px-3 py-2 bg-white border border-orange-200 rounded text-orange-900 text-sm">
-          {value}
-        </p>
+        <div className="px-3 py-2 bg-white border border-orange-200 rounded text-orange-900 text-sm min-w-[200px]">
+          {value || <span className="text-gray-400">—</span>}
+        </div>
       )}
     </div>
   );
