@@ -30,9 +30,9 @@ export default function StudentLayout({ children }) {
       href: '/student/dashboard',
     },
     {
-      label: 'Payment',
+      label: 'Track Changes',
       icon: <CreditCard size={18} className="mr-2" />,
-      href: '/student/dashboard/payment',
+      href: '/student/dashboard/track-changes',
     },
   ];
 

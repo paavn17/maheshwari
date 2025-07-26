@@ -52,6 +52,7 @@ export async function GET(request) {
     }
 
     const studentData = {
+      institution_id: student.institution_id,
       name: student.name,
       father_name: student.father_name,
       roll_no: student.roll_no,

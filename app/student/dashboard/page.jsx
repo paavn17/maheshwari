@@ -4,6 +4,28 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import StudentLayout from '@/components/student/page-layout';
 
+const editableFields = [
+  { label: "Name", key: "name" },
+  { label: "Father's Name", key: "father_name" },
+  { label: "Roll No", key: "roll_no" },
+  { label: "Class", key: "class" },
+  { label: "Section", key: "section" },
+  { label: "Start Year", key: "start_year" },
+  { label: "End Year", key: "end_year" },
+  { label: "Mobile", key: "mobile" },
+  { label: "Email", key: "email" },
+  { label: "Gender", key: "gender" },
+  { label: "Date of Birth", key: "dob" },
+  { label: "Blood Group", key: "blood_group" },
+  { label: "Aadhaar Number", key: "adhaar_no" },
+  { label: "Identification Marks", key: "identification" },
+  { label: "Address", key: "address" },
+  { label: "Branch", key: "branch" },
+  { label: "Student Type", key: "student_type" },
+  { label: "Reg Date", key: "reg_date" },
+  { label: "Account Status", key: "acc_status" }
+];
+
 const InfoRow = ({ label, value }) => (
   <div className="flex flex-col gap-0.5">
     <span className="text-xs text-gray-500">{label}</span>
@@ -13,13 +35,106 @@ const InfoRow = ({ label, value }) => (
   </div>
 );
 
+function StudentChangeRequestForm({ student, onClose }) {
+  const [formData, setFormData] = useState(() => {
+    const out = {};
+    editableFields.forEach(f => out[f.key] = student[f.key] ?? "");
+    return out;
+  });
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  const handleChange = (key, value) => setFormData(prev => ({ ...prev, [key]: value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const changes = editableFields
+      .filter(f => (formData[f.key] ?? "") !== (student[f.key] ?? ""))
+      .map(f => ({
+        field_name: f.key,
+        old_value: student[f.key] ?? "",
+        new_value: formData[f.key]
+      }));
+
+    if (!changes.length) {
+      setMsg("No changes detected!");
+      return;
+    }
+
+    setLoading(true);
+
+    setMsg(null);
+    try {  const res = await fetch('/api/student/request-change', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          institution_id: student.institution_id,
+          roll_no: student.roll_no,
+          section: student.section,
+          class: student.class,
+          changes
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setMsg("Change request submitted successfully!");
+      } else {
+        setMsg(data.error || "Submission failed.");
+      }
+    } catch (err) {
+      console.error("Error submitting change request:", err);
+      setMsg("Request failed.");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-orange-50 rounded-lg p-4 border mt-6">
+      <h3 className="font-semibold mb-3 text-orange-700">Request Change</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {editableFields.map(({ label, key }) => (
+          <div key={key}>
+            <label className="block text-xs text-gray-600">{label}</label>
+            <input
+              className="w-full border rounded px-2 py-1 text-sm"
+              type="text"
+              value={formData[key]}
+              onChange={e => handleChange(key, e.target.value)}
+            />
+            <div className="text-xxs text-gray-400">Current: {student[key] ?? <em>N/A</em>}</div>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-4 mt-4">
+        <button type="submit"
+          disabled={loading}
+          className="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50">
+          {loading ? "Submitting..." : "Submit"}
+        </button>
+        <button
+          type="button"
+          className="bg-gray-200 px-3 py-2 rounded"
+          onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+      {msg && <div className="mt-3 text-sm text-blue-600">{msg}</div>}
+    </form>
+  );
+}
+
 export default function StudentDashboard() {
   const [student, setStudent] = useState(null);
+  const [showChangeForm, setShowChangeForm] = useState(false);
 
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-        const res = await fetch('/api/student/details');
+        const res = await fetch('/api/student/details', {
+          credentials: 'include'
+        });
         const data = await res.json();
         setStudent(data.student || {});
       } catch (error) {
@@ -70,19 +185,9 @@ export default function StudentDashboard() {
 
           {/* Right: Details */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1 text-sm">
-            <InfoRow label="Name" value={student.name} />
-            <InfoRow label="Father's Name" value={student.father_name} />
-            <InfoRow label="Date of Birth" value={student.dob ? new Date(student.dob).toLocaleDateString() : ''} />
-            <InfoRow label="Gender" value={student.gender} />
-            <InfoRow label="Mobile" value={student.mobile} />
-            <InfoRow label="Email" value={student.email} />
-            <InfoRow label="Aadhaar Number" value={student.adhaar_no} />
-            <InfoRow label="Identification Marks" value={student.identification} />
-            <InfoRow label="Blood Group" value={student.blood_group} />
-            <InfoRow label="Class" value={student.class} />
-            <InfoRow label="Section" value={student.section} />
-            <InfoRow label="Student Type" value={student.student_type} />
-            <InfoRow label="Address" value={student.address} />
+            {editableFields.map(({ label, key }) => (
+              <InfoRow key={key} label={label} value={student[key]} />
+            ))}
           </div>
         </div>
 
@@ -94,19 +199,26 @@ export default function StudentDashboard() {
           >
             Pay Now
           </button>
-
           <button
             onClick={() => alert(`Downloading card: ${student.selected_id || 'Selected ID not found'}`)}
-            className={`px-8 py-3 rounded-lg font-medium transition-colors ${
-              student.payment_status === 'paid'
-                ? 'bg-gray-900 text-white hover:bg-gray-800'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
+            className={`px-8 py-3 rounded-lg font-medium transition-colors ${student.payment_status === 'paid'
+              ? 'bg-gray-900 text-white hover:bg-gray-800'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
             disabled={student.payment_status !== 'paid'}
           >
             {student.payment_status === 'paid' ? 'Download Card' : 'Payment Required'}
           </button>
+          <button
+            onClick={() => setShowChangeForm(!showChangeForm)}
+            className="px-8 py-3 bg-orange-100 text-orange-700 border border-orange-300 rounded-lg font-medium">
+            {showChangeForm ? "Hide" : "Request Change"}
+          </button>
         </div>
+
+        {/* Request Change Form */}
+        {showChangeForm && (
+          <StudentChangeRequestForm student={student} onClose={() => setShowChangeForm(false)} />
+        )}
 
         {/* Admin Info */}
         {(student.admin_name || student.admin_phone) && (
