@@ -69,6 +69,11 @@ export default function InstituteLayout({ children }) {
       href: '/institute/dashboard/upload-card',
       icon: <IdCard size={18} className="mr-2" />,
     },
+        {
+      label: 'Requested changes',
+      href: '/institute/dashboard/requested-changes',
+      icon: <IdCard size={18} className="mr-2" />,
+    },
   ];
 
   return (
