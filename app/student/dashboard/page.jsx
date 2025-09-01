@@ -10,8 +10,6 @@ const editableFields = [
   { label: "Roll No", key: "roll_no" },
   { label: "Class", key: "class" },
   { label: "Section", key: "section" },
-  { label: "Start Year", key: "start_year" },
-  { label: "End Year", key: "end_year" },
   { label: "Mobile", key: "mobile" },
   { label: "Email", key: "email" },
   { label: "Gender", key: "gender" },
@@ -21,50 +19,127 @@ const editableFields = [
   { label: "Identification Marks", key: "identification" },
   { label: "Address", key: "address" },
   { label: "Branch", key: "branch" },
-  { label: "Student Type", key: "student_type" },
-  { label: "Reg Date", key: "reg_date" },
-  { label: "Account Status", key: "acc_status" }
+  { label: "Student Type", key: "student_type" }
 ];
 
-const InfoRow = ({ label, value }) => (
+const EditableInfoRow = ({
+  label,
+  value,
+  editing,
+  fieldKey,
+  formData,
+  onChange,
+  oldValue,
+}) => (
   <div className="flex flex-col gap-0.5">
     <span className="text-xs text-gray-500">{label}</span>
-    <span className="text-sm text-gray-800 font-medium">
-      {value || <span className="italic text-gray-400">N/A</span>}
-    </span>
+    {editing ? (
+      <>
+        <input
+          className="w-full border rounded px-2 py-1 text-sm"
+          type={fieldKey === 'dob' ? 'date' : 'text'}
+          value={formData[fieldKey] ?? ''}
+          onChange={e => onChange(fieldKey, e.target.value)}
+        />
+        <div className="text-xxs text-gray-400">
+          Previous: {oldValue || <em>N/A</em>}
+        </div>
+      </>
+    ) : (
+      <span className="text-sm text-gray-800 font-medium">
+        {value || <span className="italic text-gray-400">N/A</span>}
+      </span>
+    )}
   </div>
 );
 
-function StudentChangeRequestForm({ student, onClose }) {
-  const [formData, setFormData] = useState(() => {
-    const out = {};
-    editableFields.forEach(f => out[f.key] = student[f.key] ?? "");
-    return out;
-  });
+export default function StudentDashboard() {
+  const [student, setStudent] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState(null);
 
-  const handleChange = (key, value) => setFormData(prev => ({ ...prev, [key]: value }));
+  // Fetch student on mount
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const res = await fetch('/api/student/details', { credentials: 'include' });
+        const data = await res.json();
+        setStudent(data.student || {});
+      } catch (err) {
+        setStudent({});
+      }
+    };
+    fetchStudent();
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const changes = editableFields
-      .filter(f => (formData[f.key] ?? "") !== (student[f.key] ?? ""))
+  // Reset formData to current student values when student changes or cancel editing
+  useEffect(() => {
+    if (student) {
+      const initialFormData = {};
+      editableFields.forEach(f => {
+        // If dob is empty or null, set to empty string; else convert to yyyy-mm-dd for input[type=date]
+        if (f.key === 'dob' && student[f.key]) {
+          // Normalize date format to YYYY-MM-DD (safe for date input)
+          const date = new Date(student[f.key]);
+          initialFormData[f.key] = isNaN(date.getTime()) ? '' : date.toISOString().substr(0, 10);
+        } else {
+          initialFormData[f.key] = student[f.key] ?? '';
+        }
+      });
+      setFormData(initialFormData);
+    }
+  }, [student]);
+
+  const handleChange = (key, value) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const getChanges = () => {
+    if (!student) return [];
+    return editableFields
+      .filter(f => (formData[f.key] ?? '') !== (stringifyValue(student[f.key], f.key) ?? ''))
       .map(f => ({
         field_name: f.key,
-        old_value: student[f.key] ?? "",
-        new_value: formData[f.key]
+        old_value: stringifyValue(student[f.key], f.key) ?? '',
+        new_value: formData[f.key],
       }));
+  };
+
+  // Helper to normalize student original values for comparison (especially for dob)
+  const stringifyValue = (val, key) => {
+    if (val == null) return '';
+    if (key === 'dob') {
+      // Normalize date format
+      const date = new Date(val);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().substr(0, 10);
+    }
+    return String(val);
+  };
+
+  const hasChanges = getChanges().length > 0;
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+
+    if (!student) return;
+
+    const changes = getChanges();
 
     if (!changes.length) {
-      setMsg("No changes detected!");
+      // No changes, just close edit mode silently
+      setIsEditing(false);
+      setMsg(null);
       return;
     }
 
     setLoading(true);
-
     setMsg(null);
-    try {  const res = await fetch('/api/student/request-change', {
+
+    try {
+      const res = await fetch('/api/student/request-change', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -73,77 +148,36 @@ function StudentChangeRequestForm({ student, onClose }) {
           roll_no: student.roll_no,
           section: student.section,
           class: student.class,
-          changes
-        })
+          changes,
+        }),
       });
-
       const data = await res.json();
       if (res.ok) {
         setMsg("Change request submitted successfully!");
+        setIsEditing(false);
+        // Optionally, refetch student details here to refresh data
       } else {
         setMsg(data.error || "Submission failed.");
       }
     } catch (err) {
-      console.error("Error submitting change request:", err);
       setMsg("Request failed.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="bg-orange-50 rounded-lg p-4 border mt-6">
-      <h3 className="font-semibold mb-3 text-orange-700">Request Change</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {editableFields.map(({ label, key }) => (
-          <div key={key}>
-            <label className="block text-xs text-gray-600">{label}</label>
-            <input
-              className="w-full border rounded px-2 py-1 text-sm"
-              type="text"
-              value={formData[key]}
-              onChange={e => handleChange(key, e.target.value)}
-            />
-            <div className="text-xxs text-gray-400">Current: {student[key] ?? <em>N/A</em>}</div>
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-4 mt-4">
-        <button type="submit"
-          disabled={loading}
-          className="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50">
-          {loading ? "Submitting..." : "Submit"}
-        </button>
-        <button
-          type="button"
-          className="bg-gray-200 px-3 py-2 rounded"
-          onClick={onClose}>
-          Cancel
-        </button>
-      </div>
-      {msg && <div className="mt-3 text-sm text-blue-600">{msg}</div>}
-    </form>
-  );
-}
-
-export default function StudentDashboard() {
-  const [student, setStudent] = useState(null);
-  const [showChangeForm, setShowChangeForm] = useState(false);
-
-  useEffect(() => {
-    const fetchStudent = async () => {
-      try {
-        const res = await fetch('/api/student/details', {
-          credentials: 'include'
-        });
-        const data = await res.json();
-        setStudent(data.student || {});
-      } catch (error) {
-        console.error('Failed to fetch student data:', error);
-        setStudent({});
-      }
-    };
-    fetchStudent();
-  }, []);
+  const handleCancel = () => {
+    // Reset form data to original student values
+    if (student) {
+      const resetData = {};
+      editableFields.forEach(f => {
+        resetData[f.key] = stringifyValue(student[f.key], f.key);
+      });
+      setFormData(resetData);
+    }
+    setIsEditing(false);
+    setMsg(null);
+  };
 
   if (!student) {
     return (
@@ -163,12 +197,13 @@ export default function StudentDashboard() {
       <div className="max-w-5xl mx-auto px-4 py-10">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-xl font-semibold text-gray-800">{student.institution_name}</h1>
+          <h1 className="text-xl font-semibold text-gray-800">
+            {student.institution_name}
+          </h1>
         </div>
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row gap-8">
-          {/* Left: Profile Image */}
           <div className="flex flex-col items-center w-full md:w-1/3">
             <Image
               src={student.profile_pic || '/images/avatar-placeholder.png'}
@@ -183,12 +218,50 @@ export default function StudentDashboard() {
             </span>
           </div>
 
-          {/* Right: Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1 text-sm">
+          <form className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1 text-sm" onSubmit={handleSave}>
             {editableFields.map(({ label, key }) => (
-              <InfoRow key={key} label={label} value={student[key]} />
+              <EditableInfoRow
+                key={key}
+                label={label}
+                value={student[key]}
+                editing={isEditing}
+                fieldKey={key}
+                formData={formData}
+                onChange={handleChange}
+                oldValue={student[key]}
+              />
             ))}
-          </div>
+
+            <div className="col-span-full flex gap-3 mt-4">
+              {isEditing ? (
+                <>
+                  <button
+                    type="submit"
+                    className="bg-orange-500 text-white px-6 py-2 rounded disabled:opacity-50"
+                    disabled={loading || !hasChanges}
+                  >
+                    {loading ? 'Submitting...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-gray-200 px-6 py-2 rounded"
+                    onClick={handleCancel}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="bg-orange-100 text-orange-700 border border-orange-300 rounded-lg font-medium px-6 py-2"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+          </form>
         </div>
 
         {/* Actions */}
@@ -200,25 +273,22 @@ export default function StudentDashboard() {
             Pay Now
           </button>
           <button
-            onClick={() => alert(`Downloading card: ${student.selected_id || 'Selected ID not found'}`)}
-            className={`px-8 py-3 rounded-lg font-medium transition-colors ${student.payment_status === 'paid'
-              ? 'bg-gray-900 text-white hover:bg-gray-800'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+            onClick={() =>
+              alert(`Downloading card: ${student.selected_id || 'Selected ID not found'}`)
+            }
+            className={`px-8 py-3 rounded-lg font-medium transition-colors ${
+              student.payment_status === 'paid'
+                ? 'bg-gray-900 text-white hover:bg-gray-800'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
             disabled={student.payment_status !== 'paid'}
           >
             {student.payment_status === 'paid' ? 'Download Card' : 'Payment Required'}
           </button>
-          <button
-            onClick={() => setShowChangeForm(!showChangeForm)}
-            className="px-8 py-3 bg-orange-100 text-orange-700 border border-orange-300 rounded-lg font-medium">
-            {showChangeForm ? "Hide" : "Request Change"}
-          </button>
         </div>
 
-        {/* Request Change Form */}
-        {showChangeForm && (
-          <StudentChangeRequestForm student={student} onClose={() => setShowChangeForm(false)} />
-        )}
+        {/* Message */}
+        {msg && <div className="mt-3 text-sm text-blue-600 text-center">{msg}</div>}
 
         {/* Admin Info */}
         {(student.admin_name || student.admin_phone) && (
