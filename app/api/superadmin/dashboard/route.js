@@ -1,4 +1,3 @@
-// ✅ /app/api/superadmin/dashboard/route.js
 import { db } from '@/lib/db';
 import { jwtVerify } from 'jose';
 
@@ -21,36 +20,21 @@ export async function GET(req) {
     const [institutions] = await db.query(`SELECT id, name, code FROM institutions`);
     const totalInstitutions = institutions.length;
 
-    // Get all students
-    const [students] = await db.query(`SELECT start_year, branch, student_type, gender, profile_pic FROM students`);
+    // Get students
+    const [students] = await db.query(
+      `SELECT profile_pic FROM students`
+    );
     const totalStudents = students.length;
-   const totalWithNoImage = students.filter(s => !s.profile_pic || s.profile_pic.length === 0).length;
-
-
-    // Group by year
-    const totalByYear = {};
-    students.forEach(s => {
-      if (s.start_year) {
-        totalByYear[s.start_year] = (totalByYear[s.start_year] || 0) + 1;
-      }
-    });
-
-    // Group by branch
-    const totalByBranch = {};
-    students.forEach(s => {
-      if (s.branch) {
-        totalByBranch[s.branch] = (totalByBranch[s.branch] || 0) + 1;
-      }
-    });
+    const totalWithNoImage = students.filter(
+      (s) => !s.profile_pic || s.profile_pic.length === 0
+    ).length;
 
     return new Response(
       JSON.stringify({
         totalInstitutions,
         totalStudents,
         totalWithNoImage,
-        totalByYear,
-        totalByBranch,
-        students // send full data for UI filtering
+        institutions, // ✅ send institutions directly
       }),
       { status: 200 }
     );

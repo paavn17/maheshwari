@@ -4,8 +4,14 @@ export async function GET() {
   try {
     const [rows] = await db.query(`
       SELECT 
-        ia.id, ia.name, ia.email, ia.phone, ia.org_type, ia.password,  ia.account_status,
-        ia.created_at, ia.approved, ia.approved_by,
+        ia.id, 
+        ia.name, 
+        ia.email, 
+        ia.phone, 
+        ia.password,  
+        ia.department,
+        ia.created_at, 
+        ia.approved_by,
         i.code AS college_code,
         i.logo AS institution_logo
       FROM institution_admins ia

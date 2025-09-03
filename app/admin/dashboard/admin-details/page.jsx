@@ -124,22 +124,16 @@ const Page = () => {
                   <th className="px-6 py-3">Email</th>
                   <th className="px-6 py-3">Password</th>
                   <th className="px-6 py-3">Phone</th>
-                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Department</th>
                   <th className="px-6 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-sm text-gray-800">
                 {adminsList.map((admin, idx) => {
                   const isEditing = editingId === admin.id;
-                  const isActive = admin.account_status === 'Live';
 
                   return (
-                    <tr
-                      key={admin.id}
-                      className={`border-t ${
-                        isActive ? 'bg-white' : 'bg-gray-100 text-gray-400'
-                      }`}
-                    >
+                    <tr key={admin.id} className="border-t bg-white">
                       <td className="px-6 py-3">
                         {admin.institution_logo ? (
                           <img
@@ -202,13 +196,15 @@ const Page = () => {
                         )}
                       </td>
                       <td className="px-6 py-3">
-                        {isActive ? (
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                            <span className="text-green-700 font-medium">Live</span>
-                          </div>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editData.department || ''}
+                            onChange={(e) => handleChange('department', e.target.value)}
+                            className="border rounded px-2 py-1 text-sm w-full"
+                          />
                         ) : (
-                          <span className="text-gray-400">Inactive</span>
+                          admin.department || <span className="text-gray-400">N/A</span>
                         )}
                       </td>
                       <td className="px-6 py-3">
@@ -230,14 +226,12 @@ const Page = () => {
                             </>
                           ) : (
                             <>
-                              {isActive && (
-                                <button
-                                  onClick={() => handleEdit(admin)}
-                                  className="text-orange-600 hover:text-orange-800 p-1"
-                                >
-                                  <Pencil size={16} />
-                                </button>
-                              )}
+                              <button
+                                onClick={() => handleEdit(admin)}
+                                className="text-orange-600 hover:text-orange-800 p-1"
+                              >
+                                <Pencil size={16} />
+                              </button>
                               <button
                                 onClick={() => handleDelete(admin.id)}
                                 className="text-red-600 hover:text-red-800 p-1"
