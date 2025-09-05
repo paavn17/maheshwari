@@ -39,11 +39,11 @@ export default function InstituteLayout({ children }) {
       href: '/institute/dashboard/upload-students',
       icon: <UploadCloud size={18} className="mr-2" />,
     },
-    {
-      label: 'Upload Employee Data',
-      href: '/institute/dashboard/upload-employees',
-      icon: <UserPlus size={18} className="mr-2" />,
-    },
+    // {
+    //   label: 'Upload Employee Data',
+    //   href: '/institute/dashboard/upload-employees',
+    //   icon: <UserPlus size={18} className="mr-2" />,
+    // },
     {
       label: 'Update Students Data',
       href: '/institute/dashboard/update-student',

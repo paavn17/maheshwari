@@ -33,18 +33,15 @@ export async function GET(req) {
 
     const admin = adminRows[0];
     const institution_id = admin.institution_id;
-    const department = admin.department; // Use this as branch filter now
+    const adminBranch = admin.department && admin.department.trim() !== '' ? admin.department : null;
 
-    // Fetch students for this institution AND branch (if department set)
-    const [students] = department
+    // Fetch students filtered by branch if adminBranch exists, else all institution students
+    const [students] = adminBranch
       ? await db.query(
           'SELECT * FROM students WHERE institution_id = ? AND branch = ?',
-          [institution_id, department]
+          [institution_id, adminBranch]
         )
-      : await db.query(
-          'SELECT * FROM students WHERE institution_id = ?',
-          [institution_id]
-        );
+      : await db.query('SELECT * FROM students WHERE institution_id = ?', [institution_id]);
 
     // Compute stats
     const totalStudents = students.length;
@@ -66,6 +63,7 @@ export async function GET(req) {
             ? `data:image/jpeg;base64,${Buffer.from(admin.logo).toString('base64')}`
             : null,
         },
+        adminBranch,  // Explicitly include adminBranch here
         stats: {
           totalStudents,
           paid,

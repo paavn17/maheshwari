@@ -42,11 +42,11 @@ const menuItems = [
     href: '/admin/dashboard/upload-students',
     icon: <Upload size={18} className="mr-2" />,
   },
-  {
-    title: 'Upload Employee Data',
-    href: '/admin/dashboard/upload-employees',
-    icon: <Users size={18} className="mr-2" />,
-  },
+  // {
+  //   title: 'Upload Employee Data',
+  //   href: '/admin/dashboard/upload-employees',
+  //   icon: <Users size={18} className="mr-2" />,
+  // },
   {
     title: 'Card Master',
     href: '/admin/dashboard/card-master',
@@ -62,16 +62,16 @@ const menuItems = [
     href: '/admin/dashboard/requested-card-designs',
     icon: <FileText size={18} className="mr-2" />,
   },
-  {
-    title: 'Payment Details',
-    href: '/admin/dashboard/payment-details',
-    icon: <CreditCard size={18} className="mr-2" />,
-  },
-  {
-    title: 'Download Employees Data',
-    href: '/admin/dashboard/download-employee-data',
-    icon: <Download size={18} className="mr-2" />,
-  },
+  // {
+  //   title: 'Payment Details',
+  //   href: '/admin/dashboard/payment-details',
+  //   icon: <CreditCard size={18} className="mr-2" />,
+  // },
+  // {
+  //   title: 'Download Employees Data',
+  //   href: '/admin/dashboard/download-employee-data',
+  //   icon: <Download size={18} className="mr-2" />,
+  // },
   {
     title: 'Download Students Data',
     href: '/admin/dashboard/download-data',

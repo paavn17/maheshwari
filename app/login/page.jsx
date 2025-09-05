@@ -95,12 +95,12 @@ export default function LoginPage() {
         <div className="text-center mb-6">
           <div className="flex items-center justify-center mx-auto mb-4">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-lg">
-              <Image 
-                src="/images/logo.png" 
-                alt="Logo" 
-                width={60} 
-                height={60} 
-                className="rounded-full border-2 border-white" 
+              <Image
+                src="/images/logo.png"
+                alt="Logo"
+                width={60}
+                height={60}
+                className="rounded-full border-2 border-white"
               />
             </div>
           </div>
@@ -130,15 +130,18 @@ export default function LoginPage() {
                 <button
                   key={role.id}
                   type="button"
-                  onClick={() => handleInputChange('role', role.id)}
+                  onClick={() => role.id !== 'employee' && handleInputChange('role', role.id)}
+                  disabled={role.id === 'employee'}
                   className={`p-2 rounded-lg border-2 transition-all duration-300 text-md font-medium ${
-                    formData.role === role.id
+                    role.id === 'employee'
+                      ? 'bg-gray-200 border-gray-200 text-gray-400 cursor-not-allowed'
+                      : formData.role === role.id
                       ? 'bg-gradient-to-r from-orange-400 to-orange-500 border-orange-500 text-white shadow-md transform scale-105'
                       : 'border-gray-200 hover:border-orange-300 text-gray-700 hover:bg-orange-50'
                   }`}
                 >
                   <div className="flex flex-col items-center space-y-1">
-                    <div className={formData.role === role.id ? 'text-white' : 'text-orange-500'}>
+                    <div className={formData.role === role.id ? 'text-white' : role.id === 'employee' ? 'text-gray-400' : 'text-orange-500'}>
                       {role.icon}
                     </div>
                     <span className="text-center leading-tight">{role.label}</span>
